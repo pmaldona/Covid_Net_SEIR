@@ -74,7 +74,6 @@ class SEIR :
                 #pass if object is initalized
                 t=self.t
                 S0=self.S
-                print(E0init)
                 if(E0init):
                     E0=mu*self.I
                 else:
@@ -133,7 +132,6 @@ class SEIR :
                 I[:,j+1]=I[:,j] +1/6*(k1C + 2*k2C + 2*k3C + k4C)
                 R[:,j+1]=R[:,j] +1/6*(k1D + 2*k2D + 2*k3D + k4D)
 
-            print(fix)
             if(fix==True):
                 self.S=S
                 self.E=E
