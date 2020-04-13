@@ -1,23 +1,25 @@
-from class_SEIR import SEIR 
-from  SEIRrefiner import SEIRrefiner 
+
+import class_SEIR as S
+import param_finder as p
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
 
 #Import Data
-So = pd.read_excel("../Data/poblacion_Inicial_S_stgo.xlsx", header=None).to_numpy()
+
+So = pd.read_excel("..\\..\\Data\\poblacion_Inicial_S_stgo.xlsx", header=None).to_numpy()
 S0 = So[:,0]
-Eo = pd.read_excel("../Data/poblacion_Inicial_E_stgo.xlsx", header=None).to_numpy()
+Eo = pd.read_excel("..\\..\\Data\\poblacion_Inicial_E_stgo.xlsx", header=None).to_numpy()
 E0 = Eo[:,0]
-Io = pd.read_excel("../Data/poblacion_Inicial_I_stgo.xlsx", header=None).to_numpy()
+Io = pd.read_excel("..\\..\\Data\\poblacion_Inicial_I_stgo.xlsx", header=None).to_numpy()
 I0 = Io[:,0]
-Ro = pd.read_excel("../Data/poblacion_Inicial_R_stgo.xlsx", header=None).to_numpy()
+Ro = pd.read_excel("..\\..\\Data\\poblacion_Inicial_R_stgo.xlsx", header=None).to_numpy()
 R0 = Ro[:,0]
 
-P = pd.read_excel("../Data/connectivity_stgo2.xlsx", header=None).to_numpy()
+P = pd.read_excel("..\\..\\Data\\connectivity_stgo2.xlsx", header=None).to_numpy()
 
-Ir=pd.read_excel("../Data/Simulacion-400dias-I.xlsx", header=None).to_numpy()
+Ir=pd.read_excel("..\\..\\Data\\Simulacion-400dias-I.xlsx", header=None).to_numpy()
 
 #Init variables
 tr=np.arange(Ir.shape[1])
@@ -38,21 +40,21 @@ def eta(t):
     return(np.ones(34))
 
 # Object init
+test = S.SEIR(P,eta,alpha,S0,E0,I0,R0,min(tr),max(tr),h,b_r,g_r,s_r,mu_r)
 
+#mesh test
+beta_i=np.random.uniform(min(test.beta_r),max(test.beta_r))
+sigma_i=np.random.uniform(min(test.sigma_r),max(test.sigma_r))
+gamma_i=np.random.uniform(min(test.gamma_r),max(test.gamma_r))
+mu_i=np.random.uniform(min(test.mu_r),max(test.mu_r))
 
-test = SEIR(P,eta,alpha,S0,E0,I0,R0,np.mean(b_r),np.mean(g_r),np.mean(s_r),np.mean(mu_r))
-ref_test=SEIRrefiner(P,eta,alpha,S0,E0,I0,R0,min(tr),max(tr),0.1,b_r,g_r,s_r,mu_r)
-ref_test.refine(Ir,0.1,5,2,1)
+parms=p.pso_opt(test,Ir,tr) #  pso_opt(model,Ir,tr,omega=0.5, phip=0.5, phig=0.5,swarmsize=5,maxiter=25)
+
 # Run integr
-test.integr_RK4(min(tr),max(tr),0.1,True)
-
-
-# mesh test
-
-# parms=mesh(test,Ir,tr,5,5,0.025,20)
-idx=np.searchsorted(test.S,tr)
+test.integr_RK4(test.t0,test.T,test.h,test.beta,test.sigma,test.gamma,test.mu,True,True)
 
 test.S[1,idx]-S_su1[1,:]
+
 
 
 

@@ -1,5 +1,6 @@
-from class_SEIR import SEIR 
-from  SEIRrefiner import SEIRrefiner 
+
+import class_SEIR as S
+import param_finder as p
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -38,19 +39,14 @@ def eta(t):
     return(np.ones(34))
 
 # Object init
+test = S.SEIR(P,eta,alpha,S0,E0,I0,R0,min(tr),max(tr),h,b_r,g_r,s_r,mu_r)
 
+#mesh test
 
-test = SEIR(P,eta,alpha,S0,E0,I0,R0,np.mean(b_r),np.mean(g_r),np.mean(s_r),np.mean(mu_r))
-ref_test=SEIRrefiner(P,eta,alpha,S0,E0,I0,R0,min(tr),max(tr),0.1,b_r,g_r,s_r,mu_r)
-ref_test.refine(Ir,0.1,5,2,1)
+parms=p.mesh(test,Ir,tr,1,100,1e-9,20)
+
 # Run integr
-test.integr_RK4(min(tr),max(tr),0.1,True)
-
-
-# mesh test
-
-# parms=mesh(test,Ir,tr,5,5,0.025,20)
-idx=np.searchsorted(test.S,tr)
+test.integr_RK4(test.t0,test.T,test.h,test.beta,test.sigma,test.gamma,test.mu,True,True)
 
 test.S[1,idx]-S_su1[1,:]
 
