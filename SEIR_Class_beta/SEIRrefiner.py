@@ -65,6 +65,48 @@ class SEIRrefiner:
         self.params = optimal
         return optimal
 
+    def refinepso_steps(self,Ir,swarmsize=5,maxiter=25,omega=0.5, phip=0.5, phig=0.5,iter=2):
+        tr=np.arange(Ir.shape[1])
+        mu = np.random.uniform(min(self.mu_r),max(self.mu_r))
+        self.paramsPSO = self.pso_opt_coef(Ir,tr,mu,omega=omega, phip=phip, phig=phig,swarmsize=swarmsize,maxiter=maxiter)
+            
+        for i in range(iter)
+            self.paramsPSO = self.pso_opt_mu(Ir,tr,self.,paramsPSO[0],paramsPSO[1],paramsPSO[2],omega=omega, phip=phip, phig=phig,swarmsize=swarmsize,maxiter=maxiter)
+            self.paramsPSO = self.pso_opt_coef(Ir,tr,self.paramsPSO[3],omega=omega, phip=phip, phig=phig,swarmsize=swarmsize,maxiter=maxiter)
+        return self.paramsPSO 
+
+
+    def pso_opt_mu(self,Ir,tr,beta,sigma,gamma,omega=0.5, phip=0.5, phig=0.5,swarmsize=5,maxiter=25):
+        # _(self,P,eta,alpha,S0,E0,I0,R0,beta,gamma,sigma,mu):
+        # def integr(self,t0,T,h,E0init=False):        
+        def opti(x):
+            model = SEIR(self.P,self.eta,self.alpha,self.S0,self.E0,self.I0,self.R0,beta,sigma,gamma,x)
+            model.integr(self.t0,self.T,self.h,True)
+            return(self.objective_funct(Ir,tr,model.I,model.t,2)) 
+
+        lb=[min(self.mu_r)]
+        ub=[max(self.mu_r)]
+        
+        xopt, fopt = pso(opti, lb, ub, minfunc=1, omega=omega, phip=phip, phig=phig, debug=True,swarmsize=swarmsize,maxiter=maxiter)
+        xopt = np.concatenate(beta,sigma,gamma,xopt)
+        return [xopt,fopt]
+        
+
+    def pso_opt_coef(self,Ir,tr,mu,omega=0.5, phip=0.5, phig=0.5,swarmsize=5,maxiter=25):
+        # _(self,P,eta,alpha,S0,E0,I0,R0,beta,gamma,sigma,mu):
+        # def integr(self,t0,T,h,E0init=False):        
+        def opti(x):
+            model = SEIR(self.P,self.eta,self.alpha,self.S0,self.E0,self.I0,self.R0,x[0],x[1],x[2],mu)
+            model.integr(self.t0,self.T,self.h,True)
+            return(self.objective_funct(Ir,tr,model.I,model.t,2)) 
+
+        lb=[min(self.beta_r),min(self.sigma_r),min(self.gamma_r)]
+        ub=[max(self.beta_r),max(self.sigma_r),max(self.gamma_r)]
+        
+        xopt, fopt = pso(opti, lb, ub, minfunc=1, omega=omega, phip=phip, phig=phig, debug=True,swarmsize=swarmsize,maxiter=maxiter)
+        xopt = np.concatenate(xopt,mu)
+        return [xopt,fopt]
+
     def refinepso(self,Ir,swarmsize=5,maxiter=25,omega=0.5, phip=0.5, phig=0.5):
         tr=np.arange(Ir.shape[1])
         self.paramsPSO = self.pso_opt(Ir,tr,omega=omega, phip=phip, phig=phig,swarmsize=swarmsize,maxiter=maxiter)
@@ -117,7 +159,7 @@ class SEIRrefiner:
             x_new.integr(self.t0,self.T,self.h,True)
             e_n=self.objective_funct(I_r,tr,x_new.I,x_new.t,2)
             end = timer()
-            
+     
             # Acceptance
             if(e_n/e_o<1):
                 x=x_new
@@ -128,14 +170,12 @@ class SEIRrefiner:
                 print("------------------")
                 print(b_p,s_p,g_p,m_p)
                 print(e_o,e_n)
-                print("time: "+str(end-start))
-                print("Step "+str(i))
+                # print("time: "+str(end-start))
+                # print("Step "+str(i))
             if(e_n<err):
                 break
             k+=1
-            if k>=steps*100:
-                # print("Por aca no va")
-                # print("Solo %i pasos" % (i))
+            if k>=100:
                 break
             #sleep(0.01)
         # Dejo los params historicos por si hay que debuggear esta parte
