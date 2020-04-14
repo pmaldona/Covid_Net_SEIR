@@ -74,9 +74,9 @@ ref_test=SEIRrefiner(P,eta,alpha,S0,E0,I0,R0,min(tr),max(tr),0.1,b_r,g_r,s_r,mu_
 print("PSO")
 ref_test.refinepso(n,swarmsize=50,maxiter=15,omega=0.5, phip=0.5, phig=0.5)
 param=ref_test.paramsPSO
-print(params)
-
-ref_test2=SEIRrefiner(P,eta,alpha,S0,E0,I0,R0,min(tr),max(tr),0.1,[param[0],param[0]],[param[1],param[1]],[param[2],param[2]],mu_r)
+print(param)
+d=1e-20
+ref_test2=SEIRrefiner(P,eta,alpha,S0,E0,I0,R0,min(tr),max(tr),0.1,[param[0][0]-d,param[0][0]+d],[param[0][1]-d,param[0][1]+d],[param[0][2]-d,param[0][2]+d],mu_r)
 ref_test2.refine(n,0.1,20,50,1)
 # Run integr
 
