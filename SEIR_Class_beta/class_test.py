@@ -26,10 +26,10 @@ R_su1 = pd.read_excel(path+"Simulacion-400dias-R.xlsx", header=None).to_numpy()
 
 dim=S_su1.shape
 n=np.zeros((4*dim[0],dim[1]))
-n[1:dim[0],:]=S_sul
-n[dim[0]:2*dim[0],:]=E_sul
-n[2*dim[0]:3*dim[0],:]=I_sul
-n[3*dim[0]:4*dim[0],:]=R_sul
+n[0:dim[0],:]=S_su1
+n[dim[0]:2*dim[0],:]=E_su1
+n[2*dim[0]:3*dim[0],:]=I_su1
+n[3*dim[0]:4*dim[0],:]=R_su1
 
 S0 = So[:,0]
 E0 = Eo[:,0]
