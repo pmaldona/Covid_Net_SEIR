@@ -64,7 +64,7 @@ print("PSO")
 ref_test.refinepso(Ir,swarmsize=50,maxiter=30,omega=0.5, phip=0.5, phig=0.5)
 print(ref_test.paramsPSO)
 
-Run integr
+# Run integr
 
 
 # SEIR Object test
