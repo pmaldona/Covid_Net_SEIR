@@ -20,7 +20,7 @@ class SEIR :
         #miminization is performed to adjust the best setting of the actual infected
 
         def __init__(self,P,eta,alpha,S0,E0,I0,R0,beta,gamma,sigma,mu):
-
+            self.scikitsimport = scikitsimport
             #init response values
             self.S=S0
             self.E=E0

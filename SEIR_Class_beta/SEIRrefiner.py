@@ -30,7 +30,23 @@ class SEIRrefiner:
         self.gamma_r=gamma_r
         self.mu_r=mu_r
         self.P = P
-        self.params = []
+        
+        # Output Params
+        
+        # Metropolis-Hastings  
+        self.paramsMH = []
+        self.optimalMH = []
+        self.errorMH = []
+
+        # Montecarlo - Markov
+        self.paramsMC = []
+        self.optimalMC = []
+        self.errorMC = []
+
+        # PSO
+        self.paramsPSO = []
+        self.optimalPSO = []
+        self.errorPSO = []
 
         self.error=None
         self.SEIR=None
@@ -45,9 +61,8 @@ class SEIRrefiner:
         self.h=h
         self.t=np.arange(self.t0,self.T+self.h,self.h)
 
-    def refine(self,I_r,tr,r0,Npoints,steps,err):
-        # find the optimal parameter
-        # Return a SEIR object
+    def refineMH(self,I_r,tr,r0,Npoints,steps,err):
+        # find the optimal parameter using metropolis-hastings
         mesh = self.mesh(Npoints)
         # tr=np.arange(I_r.shape[1])
         results = []
@@ -56,14 +71,31 @@ class SEIRrefiner:
             aux = self.met_hast(I_r,tr,mesh[i][0],mesh[i][1],mesh[i][2],mesh[i][3],r0,steps,err)
             results.append(aux)
             # print("Error: "+str(aux[-1]))
-        results = np.array(results)
-        optindex = np.where(results[:,4]==np.amin(results[:,4]))[0][0]
-        optimal=results[optindex,:]
-        self.error=optimal[-1]
-        # define an exit protocol
-        self.SEIR = SEIR(self.P,self.eta,self.alpha,self.S0,self.E0,self.I0,self.R0,optimal[0],optimal[1],optimal[2],optimal[3])
-        self.params = optimal
-        return optimal
+        self.paramsMH = np.array(results)
+        optindex = np.where(self.paramsMH[:,4]==np.amin(self.paramsMH[:,4]))[0][0]
+        self.optimalMH =self.paramsMH[optindex,:]
+        self.errorMH=self.optimalMH[-1]
+        # should define an exit protocol
+        self.SEIR = SEIR(self.P,self.eta,self.alpha,self.S0,self.E0,self.I0,self.R0,self.optimalMH[0],self.optimalMH[1],self.optimalMH[2],self.optimalMH[3])
+        return self.optimalMH
+
+    def refineMC(self,I_r,tr,r0,Npoints,steps,err):
+        # Refine using Montecarlo - Markov Chain
+        mesh = self.mesh(Npoints)
+        # tr=np.arange(I_r.shape[1])
+        results = []
+        for i in range(Npoints):
+            # print("Mesh point number "+str(i))
+            aux = self.met_hast(I_r,tr,mesh[i][0],mesh[i][1],mesh[i][2],mesh[i][3],r0,steps,err)
+            results.append(aux)
+            # print("Error: "+str(aux[-1]))
+        self.paramsMC = np.array(results)
+        optindex = np.where(self.paramsMC[:,4]==np.amin(self.paramsMC[:,4]))[0][0]
+        self.optimalMC =self.paramsMC[optindex,:]
+        self.errorMC=self.optimalMC[-1]
+        # should define an exit protocol
+        self.SEIR = SEIR(self.P,self.eta,self.alpha,self.S0,self.E0,self.I0,self.R0,self.optimalMH[0],self.optimalMH[1],self.optimalMH[2],self.optimalMH[3])
+        return self.optimalMC
 
     def refinepso_steps(self,Ir,swarmsize=5,maxiter=25,omega=0.5, phip=0.5, phig=0.5,iter=2):
         tr=np.arange(Ir.shape[1])
@@ -72,7 +104,7 @@ class SEIRrefiner:
         self.paramsPSO = self.pso_opt_coef(Ir,tr,mu,omega=omega, phip=phip, phig=phig,swarmsize=swarmsize,maxiter=maxiter)
             
         for i in range(iter):
-            self.paramsPSO = self.pso_opt_mu(Ir,tr,omega=omega, phip=phip, phig=phig,swarmsize=swarmsize,maxiter=maxiter)
+            self.paramsPSO = self.pso_opt_mu(Ir,tr,self.paramsPSO[0],self.paramsPSO[1],self.paramsPSO[2],omega=omega, phip=phip, phig=phig,swarmsize=swarmsize,maxiter=maxiter)
             self.paramsPSO = self.pso_opt_coef(Ir,tr,self.paramsPSO[3],omega=omega, phip=phip, phig=phig,swarmsize=swarmsize,maxiter=maxiter)
         return self.paramsPSO 
 
@@ -166,20 +198,25 @@ class SEIRrefiner:
         #print("Build SEIR")
         x=SEIR(self.P,self.eta,self.alpha,self.S0,self.E0,self.I0,self.R0,beta_i,gamma_i,sigma_i,mu_i)
         #print("RK4")
-        x.integr(self.t0,self.T,self.h,True)
+        if x.scikitsimport:
+            x.integr(self.t0,self.T,self.h,True)
+        else:
+            #print("RK4")
+            x.integr_RK4(self.t0,self.T,self.h,True)
         e_0=self.objective_funct(I_r,tr,x.I,x.t,2)
         e_o=e_0
         params = [[beta_i,sigma_i,gamma_i,mu_i,e_o]]
         i=0
         k=0
-        print("Met-Hast")
+        #print("Met-Hast")
         while i <steps:
-            start = timer()
             [b_p,s_p,g_p,m_p]=self.transition_model(x.beta,x.sigma,x.gamma,x.mu,r0)
             x_new=SEIR(self.P,self.eta,self.alpha,self.S0,self.E0,self.I0,self.R0,b_p,s_p,g_p,m_p)
-            x_new.integr(self.t0,self.T,self.h,True)
+            if x_new.scikitsimport:
+                x_new.integr(self.t0,self.T,self.h,True)
+            else:
+                x_new.integr_RK4(self.t0,self.T,self.h,True)
             e_n=self.objective_funct(I_r,tr,x_new.I,x_new.t,2)
-            end = timer()
      
             # Acceptance
             if(e_n/e_o<1):
@@ -205,7 +242,7 @@ class SEIRrefiner:
     # objective function to minimize for any cases
     def objective_funct(self,Ir,tr,I,t,l):
         idx=np.searchsorted(t,tr)
-        print(idx)
+        #print(idx)
         return LA.norm(Ir-I[:,idx],l)
 
 
