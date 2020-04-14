@@ -24,6 +24,13 @@ E_su1 = pd.read_excel(path+"Simulacion-400dias-E.xlsx", header=None).to_numpy()
 I_su1 = pd.read_excel(path+"Simulacion-400dias-I.xlsx", header=None).to_numpy()
 R_su1 = pd.read_excel(path+"Simulacion-400dias-R.xlsx", header=None).to_numpy()
 
+dim=So.shape
+n=np.zeros(4*dim[0],dim[1])
+n[1:dim[0],:]=So
+n[dim[0]:2*dim[0],:]=Eo
+n[2*dim[0]:3*dim[0],:]=Io
+n[3*dim[0]:4*dim[0],:]=Ro
+
 S0 = So[:,0]
 E0 = Eo[:,0]
 I0 = Io[:,0]
@@ -61,14 +68,14 @@ ref_test=SEIRrefiner(P,eta,alpha,S0,E0,I0,R0,min(tr),max(tr),0.1,b_r,g_r,s_r,mu_
 
 #Test  PSO
 print("PSO")
-ref_test.refinepso(Ir,swarmsize=20,maxiter=30,omega=0.5, phip=0.5, phig=0.5)
+ref_test.refinepso(n,swarmsize=20,maxiter=30,omega=0.5, phip=0.5, phig=0.5)
 print(ref_test.paramsPSO)
 
 # Run integr
 
 
 # SEIR Object test
-test = SEIR(P,eta,alpha,S0,E0,I0,R0,np.mean(b_r),np.mean(g_r),np.mean(s_r),np.mean(mu_r))
+test = SEIR(P,eta,alpha,S0,E0,I0,R0,0.21018655, 0.10047113, 0.09329693, 1.79657948)
 test.integr_RK4(min(tr),max(tr),0.1,True)
 
 
