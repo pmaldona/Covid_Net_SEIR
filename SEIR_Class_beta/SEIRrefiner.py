@@ -68,7 +68,7 @@ class SEIRrefiner:
     def refinepso(self,Ir,swarmsize=5,maxiter=25,omega=0.5, phip=0.5, phig=0.5):
         tr=np.arange(Ir.shape[1])
         self.paramsPSO = self.pso_opt(Ir,tr,omega=omega, phip=phip, phig=phig,swarmsize=swarmsize,maxiter=maxiter)
-        return self.paramsPSO
+        return self.paramsPSO 
 
 
     def pso_opt(self,Ir,tr,omega=0.5, phip=0.5, phig=0.5,swarmsize=5,maxiter=25):

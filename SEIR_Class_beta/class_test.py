@@ -63,6 +63,7 @@ print(ref_test.params)
 print("PSO")
 ref_test.refinepso(Ir,swarmsize=2,maxiter=3,omega=0.5, phip=0.5, phig=0.5)
 print(ref_test.paramsPSO)
+
 # Run integr
 
 
