@@ -17,7 +17,8 @@ else:
 R_r = pd.read_excel(path+"RecupYMuerte.xlsx", header=None).to_numpy()
 I_r = pd.read_excel(path+"Inf-RecupYMuerte.xlsx", header=None).to_numpy()
 S0 = pd.read_excel(path+"vectorpoblacioncomuna.xlsx", header=None).to_numpy()
-S0=S0[0]
+S0=S0.reshape(16)
+
 
 tr=[-13,-12,-11,-10,-9,-8,-7,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28]
 tr=np.array(tr)
@@ -30,7 +31,7 @@ R0 = R_r[:,ind[0][0]]
 Ir= I_r[:,ind[0][0]:ind_f[0][0]+1]
 ta=tr[ind[0][0]:ind_f[0][0]+1]
 h=0.1
-P=np.eye(17)
+P=np.eye(16)
 # np.where(results[:,4]==np.amin(results[:,4]))[0][0]
 
 # Parameter range
