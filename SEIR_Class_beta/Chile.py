@@ -47,10 +47,10 @@ mu_r=[0.5,2.5] #2
 
 # Strategy functions
 def alpha(t):
-    return(np.zeros([17,17]))
+    return(np.zeros([16,16]))
 
 def eta(t):
-    return(np.ones(17))
+    return(np.ones(16))
 
 # Object init
 
