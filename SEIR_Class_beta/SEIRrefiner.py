@@ -70,7 +70,7 @@ class SEIRrefiner:
         mu = np.random.uniform(min(self.mu_r),max(self.mu_r))
         self.paramsPSO = self.pso_opt_coef(Ir,tr,mu,omega=omega, phip=phip, phig=phig,swarmsize=swarmsize,maxiter=maxiter)
             
-        for i in range(iter)
+        for i in range(iter):
             self.paramsPSO = self.pso_opt_mu(Ir,tr,self.,paramsPSO[0],paramsPSO[1],paramsPSO[2],omega=omega, phip=phip, phig=phig,swarmsize=swarmsize,maxiter=maxiter)
             self.paramsPSO = self.pso_opt_coef(Ir,tr,self.paramsPSO[3],omega=omega, phip=phip, phig=phig,swarmsize=swarmsize,maxiter=maxiter)
         return self.paramsPSO 
