@@ -205,6 +205,7 @@ class SEIRrefiner:
     # objective function to minimize for any cases
     def objective_funct(self,Ir,tr,I,t,l):
         idx=np.searchsorted(t,tr)
+        print(idx)
         return LA.norm(Ir-I[:,idx],l)
 
 
