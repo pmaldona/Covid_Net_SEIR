@@ -71,7 +71,7 @@ class SEIRrefiner:
         self.paramsPSO = self.pso_opt_coef(Ir,tr,mu,omega=omega, phip=phip, phig=phig,swarmsize=swarmsize,maxiter=maxiter)
             
         for i in range(iter):
-            self.paramsPSO = self.pso_opt_mu(Ir,tr,self.,paramsPSO[0],paramsPSO[1],paramsPSO[2],omega=omega, phip=phip, phig=phig,swarmsize=swarmsize,maxiter=maxiter)
+            self.paramsPSO = self.pso_opt_mu(Ir,tr,self.paramsPSO[0],self.paramsPSO[1],self.paramsPSO[2],omega=omega, phip=phip, phig=phig,swarmsize=swarmsize,maxiter=maxiter)
             self.paramsPSO = self.pso_opt_coef(Ir,tr,self.paramsPSO[3],omega=omega, phip=phip, phig=phig,swarmsize=swarmsize,maxiter=maxiter)
         return self.paramsPSO 
 
