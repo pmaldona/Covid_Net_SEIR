@@ -68,7 +68,7 @@ ref_test=SEIRrefiner(P,eta,alpha,S0,E0,I0,R0,min(tr),max(tr),0.1,b_r,g_r,s_r,mu_
 
 #Test  PSO
 print("PSO")
-ref_test.refinepso(n,swarmsize=50,maxiter=30,omega=1, phip=1, phig=1)
+ref_test.refinepso(n,swarmsize=50,maxiter=30,omega=0.5, phip=0.5, phig=0.5)
 param=ref_test.paramsPSO
 ref_test2=SEIRrefiner(P,eta,alpha,S0,E0,I0,R0,min(tr),max(tr),0.1,[param[0],param[0]],[param[1],param[1]],[param[2],param[2]],mu_r)
 ref_test2.refine(n,0.1,20,50,1)
