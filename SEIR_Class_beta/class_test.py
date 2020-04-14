@@ -15,14 +15,14 @@ else:
 
 So = pd.read_excel(path+"poblacion_Inicial_S_stgo.xlsx", header=None).to_numpy()    
 Eo = pd.read_excel(path+"poblacion_Inicial_E_stgo.xlsx", header=None).to_numpy()    
-Io = pd.read_excel(path+"\poblacion_Inicial_I_stgo.xlsx", header=None).to_numpy()    
-Ro = pd.read_excel(path+"\poblacion_Inicial_R_stgo.xlsx", header=None).to_numpy()
-P = pd.read_excel(path+"\connectivity_stgo2.xlsx", header=None).to_numpy()
-Ir = pd.read_excel(path+"\Simulacion-400dias-I.xlsx", header=None).to_numpy()
-S_su1 = pd.read_excel(path+"\Simulacion-400dias-S.xlsx", header=None).to_numpy()
-E_su1 = pd.read_excel(path+"\Simulacion-400dias-E.xlsx", header=None).to_numpy()
-I_su1 = pd.read_excel(path+"\Simulacion-400dias-I.xlsx", header=None).to_numpy()
-R_su1 = pd.read_excel(path+"\Simulacion-400dias-R.xlsx", header=None).to_numpy()
+Io = pd.read_excel(path+"poblacion_Inicial_I_stgo.xlsx", header=None).to_numpy()    
+Ro = pd.read_excel(path+"poblacion_Inicial_R_stgo.xlsx", header=None).to_numpy()
+P = pd.read_excel(path+"connectivity_stgo2.xlsx", header=None).to_numpy()
+Ir = pd.read_excel(path+"Simulacion-400dias-I.xlsx", header=None).to_numpy()
+S_su1 = pd.read_excel(path+"Simulacion-400dias-S.xlsx", header=None).to_numpy()
+E_su1 = pd.read_excel(path+"Simulacion-400dias-E.xlsx", header=None).to_numpy()
+I_su1 = pd.read_excel(path+"Simulacion-400dias-I.xlsx", header=None).to_numpy()
+R_su1 = pd.read_excel(path+"Simulacion-400dias-R.xlsx", header=None).to_numpy()
 
 S0 = So[:,0]
 E0 = Eo[:,0]
