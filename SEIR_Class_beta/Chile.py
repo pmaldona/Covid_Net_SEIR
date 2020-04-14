@@ -30,6 +30,7 @@ R0 = R_r[:,ind[0][0]]
 Ir= I_r[:,ind[0][0]:ind_f[0][0]+1]
 ta=tr[ind[0][0]:ind_f[0][0]+1]
 h=0.1
+P=np.eye(17)
 # np.where(results[:,4]==np.amin(results[:,4]))[0][0]
 
 # Parameter range
