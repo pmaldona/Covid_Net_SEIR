@@ -67,11 +67,12 @@ class SEIRrefiner:
 
     def refinepso_steps(self,Ir,swarmsize=5,maxiter=25,omega=0.5, phip=0.5, phig=0.5,iter=2):
         tr=np.arange(Ir.shape[1])
-        mu = np.random.uniform(min(self.mu_r),max(self.mu_r))
+        #mu = np.random.uniform(min(self.mu_r),max(self.mu_r))
+        mu = 2
         self.paramsPSO = self.pso_opt_coef(Ir,tr,mu,omega=omega, phip=phip, phig=phig,swarmsize=swarmsize,maxiter=maxiter)
             
         for i in range(iter):
-            self.paramsPSO = self.pso_opt_mu(Ir,tr,self.paramsPSO[0],self.paramsPSO[1],self.paramsPSO[2],omega=omega, phip=phip, phig=phig,swarmsize=swarmsize,maxiter=maxiter)
+            self.paramsPSO = self.pso_opt(Ir,tr,omega=omega, phip=phip, phig=phig,swarmsize=swarmsize,maxiter=maxiter)
             self.paramsPSO = self.pso_opt_coef(Ir,tr,self.paramsPSO[3],omega=omega, phip=phip, phig=phig,swarmsize=swarmsize,maxiter=maxiter)
         return self.paramsPSO 
 
@@ -88,7 +89,7 @@ class SEIRrefiner:
         ub=[max(self.mu_r)]
         
         xopt, fopt = pso(opti, lb, ub, minfunc=1, omega=omega, phip=phip, phig=phig, debug=True,swarmsize=swarmsize,maxiter=maxiter)
-        xopt = np.concatenate(beta,sigma,gamma,xopt)
+        xopt = np.concatenate([beta,sigma,gamma],xopt)
         return [xopt,fopt]
         
 
