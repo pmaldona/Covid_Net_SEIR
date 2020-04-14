@@ -89,7 +89,7 @@ class SEIRrefiner:
         ub=[max(self.mu_r)]
         
         xopt, fopt = pso(opti, lb, ub, minfunc=1, omega=omega, phip=phip, phig=phig, debug=True,swarmsize=swarmsize,maxiter=maxiter)
-        xopt = np.concatenate([beta,sigma,gamma],xopt)
+        xopt = np.append([beta,sigma,gamma],xopt)
         return [xopt,fopt]
         
 
@@ -105,7 +105,7 @@ class SEIRrefiner:
         ub=[max(self.beta_r),max(self.sigma_r),max(self.gamma_r)]
         
         xopt, fopt = pso(opti, lb, ub, minfunc=1, omega=omega, phip=phip, phig=phig, debug=True,swarmsize=swarmsize,maxiter=maxiter)
-        xopt = np.concatenate(xopt,mu)
+        xopt = np.append(xopt,mu)
         return [xopt,fopt]
 
     def refinepso(self,Ir,swarmsize=5,maxiter=25,omega=0.5, phip=0.5, phig=0.5):
@@ -120,7 +120,7 @@ class SEIRrefiner:
         def opti(x):
             model = SEIR(self.P,self.eta,self.alpha,self.S0,self.E0,self.I0,self.R0,x[0],x[1],x[2],x[3])
             model.integr(self.t0,self.T,self.h,True)
-            return(self.objective_funct(Ir,tr,model.I,model.t,2))  
+            return(self.objective_funct(Ir,tr,model.I,model.t,'fro'))  
             
         lb=[min(self.beta_r),min(self.sigma_r),min(self.gamma_r),min(self.mu_r)]
         ub=[max(self.beta_r),max(self.sigma_r),max(self.gamma_r),max(self.mu_r)]
