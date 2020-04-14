@@ -7,7 +7,11 @@ Created on Tue Apr  7 23:28:59 2020
 """
 
 import numpy as np
-from scikits.odes.odeint import odeint
+try:
+    from scikits.odes.odeint import odeint
+    scikitsimport = True
+except:
+    scikitsimport = False
 
 
 class SEIR :
@@ -50,68 +54,6 @@ class SEIR :
                 return((np.diag(eta(t))+alpha(t))*(np.eye(P.shape[1])+P))
 
             self.G=G
-
-
-        def integr(self,t0,T,h,E0init=False):
-            #integrator function that star form t0 and finish with T with h as
-            #timestep. If there aren't inital values in [t0,T] function doesn't
-            #start. Or it's start if class object is initialze.
-
-
-            if(len(self.S.shape)==1):
-                #pass if object is initalized
-                S0=self.S
-                if(E0init):
-                    E0=self.mu*self.I
-                else:
-                    E0=self.E
-                I0=self.I
-                R0=self.R
-                self.t=np.arange(t0,T+h,h)
-
-            elif((min(self.t)<=t0) & (t0<=max(self.t))):
-                #Condition over exiting time in already initialized object
-
-                #Search fot initial time
-                idx=np.searchsorted(self.t,t0)
-
-                #set initial condition
-                S0=self.S[:,idx]
-                E0=self.E[:,idx]
-                I0=self.I[:,idx]
-                R0=self.R[:,idx]
-
-                #set time grid
-                self.t=np.arange(self.t[idx],T+h,h)
-
-
-            else:
-                return()
-                
-            dim=self.S.shape[0]
-            
-            def model_SEIR_graph(t,y,ydot):
-
-
-                ydot[0:dim]=self.dSdt(t,y[0:dim],y[2*dim:3*dim])
-                ydot[dim:2*dim]=self.dEdt(t,y[0:dim],y[2*dim:3*dim],y[dim:2*dim])
-                ydot[2*dim:3*dim]=self.dIdt(t,y[dim:2*dim],y[2*dim:3*dim])
-                ydot[3*dim:4*dim]=self.dRdt(t,y[2*dim:3*dim]) 
-
-            
-            initcond = np.concatenate((S0, E0, I0, R0))
-            # initcond = initcond.reshape(4*dim)
-            soln = odeint(model_SEIR_graph, self.t, initcond)
-            
-            self.t=soln[1][0]   
-            soln=np.transpose(np.array(soln[1][1]))
-            
-            self.S = soln[0:dim,:]   
-            self.E = soln[dim:2*dim,:]
-            self.I = soln[2*dim:3*dim,:]
-            self.R = soln[3*dim:4*dim,:]
-
-
 
         def integr_RK4(self,t0,T,h,E0init=False):
             #integrator function that star form t0 and finish with T with h as
@@ -188,3 +130,67 @@ class SEIR :
             self.R=R
             return
             
+
+        def integr(self,t0,T,h,E0init=False):
+            #integrator function that star form t0 and finish with T with h as
+            #timestep. If there aren't inital values in [t0,T] function doesn't
+            #start. Or it's start if class object is initialze.
+
+            if scikitsimport:
+                if(len(self.S.shape)==1):
+                    #pass if object is initalized
+                    S0=self.S
+                    if(E0init):
+                        E0=self.mu*self.I
+                    else:
+                        E0=self.E
+                    I0=self.I
+                    R0=self.R
+                    self.t=np.arange(t0,T+h,h)
+
+                elif((min(self.t)<=t0) & (t0<=max(self.t))):
+                    #Condition over exiting time in already initialized object
+
+                    #Search fot initial time
+                    idx=np.searchsorted(self.t,t0)
+
+                    #set initial condition
+                    S0=self.S[:,idx]
+                    E0=self.E[:,idx]
+                    I0=self.I[:,idx]
+                    R0=self.R[:,idx]
+
+                    #set time grid
+                    self.t=np.arange(self.t[idx],T+h,h)
+
+
+                else:
+                    return()
+                    
+                dim=self.S.shape[0]
+                
+                def model_SEIR_graph(t,y,ydot):
+
+
+                    ydot[0:dim]=self.dSdt(t,y[0:dim],y[2*dim:3*dim])
+                    ydot[dim:2*dim]=self.dEdt(t,y[0:dim],y[2*dim:3*dim],y[dim:2*dim])
+                    ydot[2*dim:3*dim]=self.dIdt(t,y[dim:2*dim],y[2*dim:3*dim])
+                    ydot[3*dim:4*dim]=self.dRdt(t,y[2*dim:3*dim]) 
+
+                
+                initcond = np.concatenate((S0, E0, I0, R0))
+                # initcond = initcond.reshape(4*dim)
+                soln = odeint(model_SEIR_graph, self.t, initcond)
+                
+                self.t=soln[1][0]   
+                soln=np.transpose(np.array(soln[1][1]))
+                
+                self.S = soln[0:dim,:]   
+                self.E = soln[dim:2*dim,:]
+                self.I = soln[2*dim:3*dim,:]
+                self.R = soln[3*dim:4*dim,:]
+
+            else:
+                print("Scikit couldn't be imported. Using RK4 instead")                
+                return self.integr_RK4(t0,T,h,E0init)
+
