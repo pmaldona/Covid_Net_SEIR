@@ -90,7 +90,7 @@ class SEIRrefiner:
             n[dim[0]:2*dim[0],:]=model.E
             n[2*dim[0]:3*dim[0],:]=model.I
             n[3*dim[0]:4*dim[0],:]=model.R
-            return(self.objective_funct(Ir,tr,n,model.t,2)) 
+            return(self.objective_funct(Ir,tr,n,model.t,'fro')) 
 
         lb=[min(self.mu_r)]
         ub=[max(self.mu_r)]
@@ -113,7 +113,7 @@ class SEIRrefiner:
             n[dim[0]:2*dim[0],:]=model.E
             n[2*dim[0]:3*dim[0],:]=model.I
             n[3*dim[0]:4*dim[0],:]=model.R
-            return(self.objective_funct(Ir,tr,n,model.t,2)) 
+            return(self.objective_funct(Ir,tr,n,model.t,'fro')) 
 
         lb=[min(self.beta_r),min(self.sigma_r),min(self.gamma_r)]
         ub=[max(self.beta_r),max(self.sigma_r),max(self.gamma_r)]
