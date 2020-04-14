@@ -83,7 +83,14 @@ class SEIRrefiner:
         def opti(x):
             model = SEIR(self.P,self.eta,self.alpha,self.S0,self.E0,self.I0,self.R0,beta,sigma,gamma,x)
             model.integr(self.t0,self.T,self.h,True)
-            return(self.objective_funct(Ir,tr,model.I,model.t,2)) 
+            
+            dim=model.S.shape
+            n=np.zeros((4*dim[0],dim[1]))
+            n[0:dim[0],:]=model.S
+            n[dim[0]:2*dim[0],:]=model.E
+            n[2*dim[0]:3*dim[0],:]=model.I
+            n[3*dim[0]:4*dim[0],:]=model.R
+            return(self.objective_funct(Ir,tr,n,model.t,2)) 
 
         lb=[min(self.mu_r)]
         ub=[max(self.mu_r)]
@@ -99,7 +106,14 @@ class SEIRrefiner:
         def opti(x):
             model = SEIR(self.P,self.eta,self.alpha,self.S0,self.E0,self.I0,self.R0,x[0],x[1],x[2],mu)
             model.integr(self.t0,self.T,self.h,True)
-            return(self.objective_funct(Ir,tr,model.I,model.t,2)) 
+            
+            dim=model.S.shape
+            n=np.zeros((4*dim[0],dim[1]))
+            n[0:dim[0],:]=model.S
+            n[dim[0]:2*dim[0],:]=model.E
+            n[2*dim[0]:3*dim[0],:]=model.I
+            n[3*dim[0]:4*dim[0],:]=model.R
+            return(self.objective_funct(Ir,tr,n,model.t,2)) 
 
         lb=[min(self.beta_r),min(self.sigma_r),min(self.gamma_r)]
         ub=[max(self.beta_r),max(self.sigma_r),max(self.gamma_r)]
