@@ -26,7 +26,6 @@ class SEIR :
             
             #init of strategy used for the dynamics
             self.strat_prop(P,alpha,eta)
-            print(self.G)
 
             #saved stragegy functions
             self.alpha=alpha
@@ -102,10 +101,7 @@ class SEIR :
             
             initcond = np.concatenate((S0, E0, I0, R0))
             # initcond = initcond.reshape(4*dim)
-            print(initcond)
             soln = odeint(model_SEIR_graph, self.t, initcond)
-            
-            print(soln[1])
             
             self.t=soln[1][0]   
             soln=np.transpose(np.array(soln[1][1]))

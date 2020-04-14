@@ -56,13 +56,13 @@ ref_test=SEIRrefiner(P,eta,alpha,S0,E0,I0,R0,min(tr),max(tr),0.1,b_r,g_r,s_r,mu_
 
 # Test metropolis-hastings
 print("Metropolis-hastings")
-ref_test.refine(Ir,0.1,5,2,1)
+ref_test.refine(Ir,0.1,100,20,1)
 print(ref_test.params)
 
 # Test  PSO
-print("PSO")
-ref_test.refinepso(Ir,swarmsize=2,maxiter=3,omega=0.5, phip=0.5, phig=0.5)
-print(ref_test.paramsPSO)
+# print("PSO")
+# ref_test.refinepso(Ir,swarmsize=2,maxiter=3,omega=0.5, phip=0.5, phig=0.5)
+# print(ref_test.paramsPSO)
 
 # Run integr
 

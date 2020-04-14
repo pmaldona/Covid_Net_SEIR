@@ -52,10 +52,10 @@ class SEIRrefiner:
         tr=np.arange(I_r.shape[1])
         results = []
         for i in range(Npoints):
-            print("Mesh point number "+str(i))
+            # print("Mesh point number "+str(i))
             aux = self.met_hast(I_r,tr,mesh[i][0],mesh[i][1],mesh[i][2],mesh[i][3],r0,steps,err)
             results.append(aux)
-            print("Error: "+str(aux[-1]))
+            # print("Error: "+str(aux[-1]))
         results = np.array(results)
         optindex = np.where(results[:,4]==np.amin(results[:,4]))[0][0]
         optimal=results[optindex,:]
@@ -117,23 +117,25 @@ class SEIRrefiner:
             x_new.integr(self.t0,self.T,self.h,True)
             e_n=self.objective_funct(I_r,tr,x_new.I,x_new.t,2)
             end = timer()
-            print("------------------")
-            print(b_p,s_p,g_p,m_p)
-            print(e_o,e_n)
-            print("time: "+str(end-start))
+            
             # Acceptance
             if(e_n/e_o<1):
                 x=x_new
                 e_o = e_n
                 params.append([b_p,s_p,g_p,m_p,e_n])
                 i+=1
+                k=0
+                print("------------------")
+                print(b_p,s_p,g_p,m_p)
+                print(e_o,e_n)
+                print("time: "+str(end-start))
                 print("Step "+str(i))
             if(e_n<err):
                 break
             k+=1
-            if k>=50:
-                print("Por aca no va")
-                print("Solo %i pasos" % (i))
+            if k>=steps*100:
+                # print("Por aca no va")
+                # print("Solo %i pasos" % (i))
                 break
             #sleep(0.01)
         # Dejo los params historicos por si hay que debuggear esta parte
