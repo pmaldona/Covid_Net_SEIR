@@ -59,7 +59,7 @@ def eta(t):
 
 # Seir Refiner tests
 # Create param refiner object
-ref_test=SEIRrefiner_steps(P,eta,alpha,S0,E0,I0,R0,min(tr),max(tr),0.1,b_r,g_r,s_r,mu_r)
+ref_test=SEIRrefiner(P,eta,alpha,S0,E0,I0,R0,min(tr),max(tr),0.1,b_r,g_r,s_r,mu_r)
 
 # # Test metropolis-hastings
 # print("Metropolis-hastings")
@@ -68,7 +68,7 @@ ref_test=SEIRrefiner_steps(P,eta,alpha,S0,E0,I0,R0,min(tr),max(tr),0.1,b_r,g_r,s
 
 #Test  PSO
 print("PSO")
-ref_test.refinepso(n,swarmsize=50,maxiter=30,omega=1, phip=1, phig=1)
+ref_test.refinepso_steps(n,swarmsize=50,maxiter=30,omega=1, phip=1, phig=1)
 print(ref_test.paramsPSO)
 
 # Run integr
