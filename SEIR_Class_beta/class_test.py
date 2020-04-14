@@ -41,10 +41,10 @@ tr=np.arange(Ir.shape[1])
 h=0.1
 
 # Parameter range
-b_r=[0.1,0.3] #0.1
+b_r=[0.58,1.68] #0.1
 s_r=[0.05,0.15] #0.1
 g_r=[0.05,0.15] #0.1
-mu_r=[1,3] #2
+mu_r=[0.5,2.5] #2
 
 
 # Strategy functions
@@ -69,8 +69,9 @@ ref_test=SEIRrefiner(P,eta,alpha,S0,E0,I0,R0,min(tr),max(tr),0.1,b_r,g_r,s_r,mu_
 #Test  PSO
 print("PSO")
 ref_test.refinepso(n,swarmsize=50,maxiter=30,omega=1, phip=1, phig=1)
-print(ref_test.paramsPSO)
-
+param=ref_test.paramsPSO
+ref_test2=SEIRrefiner(P,eta,alpha,S0,E0,I0,R0,min(tr),max(tr),0.1,[param[0],param[0]],[param[1],param[1]],[param[2],param[2]],mu_r)
+ref_test2.refine(n,0.1,20,50,1)
 # Run integr
 
 
