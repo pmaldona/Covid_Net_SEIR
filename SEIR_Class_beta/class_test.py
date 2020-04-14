@@ -25,7 +25,7 @@ I_su1 = pd.read_excel(path+"Simulacion-400dias-I.xlsx", header=None).to_numpy()
 R_su1 = pd.read_excel(path+"Simulacion-400dias-R.xlsx", header=None).to_numpy()
 
 dim=So.shape
-n=np.zeros(4*dim[0],dim[1])
+n=np.zeros((4*dim[0],dim[1]))
 n[1:dim[0],:]=So
 n[dim[0]:2*dim[0],:]=Eo
 n[2*dim[0]:3*dim[0],:]=Io
