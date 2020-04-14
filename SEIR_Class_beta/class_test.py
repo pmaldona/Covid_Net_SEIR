@@ -77,7 +77,7 @@ def eta(t):
 # print(param)
 # d=1e-20
 ref_test2=SEIRrefiner(P,eta,alpha,S0,E0,I0,R0,min(tr),max(tr),0.1,[0.197,0.198],[0.099,0.11],[0.099,0.11],mu_r)
-ref_test2.refine(n,0.1,20,50,1)
+ref_test2.refine(Ir,0.1,20,50,1)
 # Run integr
 
 
