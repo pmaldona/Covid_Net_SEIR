@@ -122,7 +122,7 @@ class SEIRrefiner:
             model.integr(self.t0,self.T,self.h,True)
             dim=model.S.shape
             n=np.zeros((4*dim[0],dim[1]))
-            n[1:dim[0],:]=model.S
+            n[0:dim[0],:]=model.S
             n[dim[0]:2*dim[0],:]=model.E
             n[2*dim[0]:3*dim[0],:]=model.I
             n[3*dim[0]:4*dim[0],:]=model.R

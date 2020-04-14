@@ -24,7 +24,7 @@ E_su1 = pd.read_excel(path+"Simulacion-400dias-E.xlsx", header=None).to_numpy()
 I_su1 = pd.read_excel(path+"Simulacion-400dias-I.xlsx", header=None).to_numpy()
 R_su1 = pd.read_excel(path+"Simulacion-400dias-R.xlsx", header=None).to_numpy()
 
-dim=S_sul.shape
+dim=S_su1.shape
 n=np.zeros((4*dim[0],dim[1]))
 n[1:dim[0],:]=S_sul
 n[dim[0]:2*dim[0],:]=E_sul
