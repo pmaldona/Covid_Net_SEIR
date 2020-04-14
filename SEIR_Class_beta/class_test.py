@@ -59,7 +59,7 @@ ref_test=SEIRrefiner(P,eta,alpha,S0,E0,I0,R0,min(tr),max(tr),0.1,b_r,g_r,s_r,mu_
 # ref_test.refine(Ir,0.1,100,20,1)
 # print(ref_test.params)
 
-Test  PSO
+#Test  PSO
 print("PSO")
 ref_test.refinepso(Ir,swarmsize=50,maxiter=30,omega=0.5, phip=0.5, phig=0.5)
 print(ref_test.paramsPSO)
