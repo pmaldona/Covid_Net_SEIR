@@ -61,7 +61,7 @@ ref_test=SEIRrefiner(P,eta,alpha,S0,E0,I0,R0,min(tr),max(tr),0.1,b_r,g_r,s_r,mu_
 
 #Test  PSO
 print("PSO")
-ref_test.refinepso(Ir,swarmsize=20,maxiter=30,omega=0.5, phip=0.5, phig=0.5,iter=2)
+ref_test.refinepso(Ir,swarmsize=20,maxiter=30,omega=0.5, phip=0.5, phig=0.5)
 print(ref_test.paramsPSO)
 
 # Run integr
