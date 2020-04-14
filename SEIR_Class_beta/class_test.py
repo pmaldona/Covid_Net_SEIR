@@ -1,23 +1,33 @@
-from class_SEIR import SEIR 
+from class_SEIR import SEIR
 from  SEIRrefiner import SEIRrefiner 
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 
 
 #Import Data
-So = pd.read_excel("../Data/poblacion_Inicial_S_stgo.xlsx", header=None).to_numpy()
+if os.name == 'nt':
+    path = "D:\\samue\\Dropbox\\AFES Datascience\\Ciencia y Vida\\Data\\"
+
+else:
+    path = "../Data/"
+
+So = pd.read_excel(path+"poblacion_Inicial_S_stgo.xlsx", header=None).to_numpy()    
+Eo = pd.read_excel(path+"poblacion_Inicial_E_stgo.xlsx", header=None).to_numpy()    
+Io = pd.read_excel(path+"\poblacion_Inicial_I_stgo.xlsx", header=None).to_numpy()    
+Ro = pd.read_excel(path+"\poblacion_Inicial_R_stgo.xlsx", header=None).to_numpy()
+P = pd.read_excel(path+"\connectivity_stgo2.xlsx", header=None).to_numpy()
+Ir = pd.read_excel(path+"\Simulacion-400dias-I.xlsx", header=None).to_numpy()
+S_su1 = pd.read_excel(path+"\Simulacion-400dias-S.xlsx", header=None).to_numpy()
+E_su1 = pd.read_excel(path+"\Simulacion-400dias-E.xlsx", header=None).to_numpy()
+I_su1 = pd.read_excel(path+"\Simulacion-400dias-I.xlsx", header=None).to_numpy()
+R_su1 = pd.read_excel(path+"\Simulacion-400dias-R.xlsx", header=None).to_numpy()
+
 S0 = So[:,0]
-Eo = pd.read_excel("../Data/poblacion_Inicial_E_stgo.xlsx", header=None).to_numpy()
 E0 = Eo[:,0]
-Io = pd.read_excel("../Data/poblacion_Inicial_I_stgo.xlsx", header=None).to_numpy()
 I0 = Io[:,0]
-Ro = pd.read_excel("../Data/poblacion_Inicial_R_stgo.xlsx", header=None).to_numpy()
 R0 = Ro[:,0]
-
-P = pd.read_excel("../Data/connectivity_stgo2.xlsx", header=None).to_numpy()
-
-Ir=pd.read_excel("../Data/Simulacion-400dias-I.xlsx", header=None).to_numpy()
 
 #Init variables
 tr=np.arange(Ir.shape[1])
@@ -40,10 +50,20 @@ def eta(t):
 # Object init
 
 
-test = SEIR(P,eta,alpha,S0,E0,I0,R0,np.mean(b_r),np.mean(g_r),np.mean(s_r),np.mean(mu_r))
+# Seir Refiner tests
+# Create param refiner object
 ref_test=SEIRrefiner(P,eta,alpha,S0,E0,I0,R0,min(tr),max(tr),0.1,b_r,g_r,s_r,mu_r)
+
+# Test metropolis-hastings
 ref_test.refine(Ir,0.1,5,2,1)
+
+# Test  PSO
+ref_test.refinepso(Ir,swarmsize=2,maxiter=3,omega=0.5, phip=0.5, phig=0.5)
 # Run integr
+
+
+# SEIR Object test
+test = SEIR(P,eta,alpha,S0,E0,I0,R0,np.mean(b_r),np.mean(g_r),np.mean(s_r),np.mean(mu_r))
 test.integr_RK4(min(tr),max(tr),0.1,True)
 
 
@@ -56,10 +76,6 @@ test.S[1,idx]-S_su1[1,:]
 
 
 
-S_su1 = pd.read_excel("../Data/Simulacion-400dias-S.xlsx", header=None).to_numpy()
-E_su1 = pd.read_excel("../Data/Simulacion-400dias-E.xlsx", header=None).to_numpy()
-I_su1 = pd.read_excel("../Data/Simulacion-400dias-I.xlsx", header=None).to_numpy()
-R_su1 = pd.read_excel("../Data/Simulacion-400dias-R.xlsx", header=None).to_numpy()
 
 idx=np.searchsorted(test.t,tr)
 

@@ -10,6 +10,7 @@ import pandas
 from numpy import linalg as LA
 from time import sleep
 from timeit import default_timer as timer
+from pyswarm import pso
 
 class SEIRrefiner:
     """
@@ -29,6 +30,7 @@ class SEIRrefiner:
         self.gamma_r=gamma_r
         self.mu_r=mu_r
         self.P = P
+        self.params = []
 
         self.error=None
         self.SEIR=None
@@ -60,7 +62,28 @@ class SEIRrefiner:
         self.error=optimal[-1]
         # define an exit protocol
         self.SEIR = SEIR(self.P,self.eta,self.alpha,self.S0,self.E0,self.I0,self.R0,optimal[0],optimal[1],optimal[2],optimal[3])
+        self.params = optimal
         return optimal
+
+    def refinepso(self,Ir,swarmsize=5,maxiter=25,omega=0.5, phip=0.5, phig=0.5):
+        tr=np.arange(Ir.shape[1])
+        params = self.pso_opt(Ir,tr,omega=omega, phip=phip, phig=phig,swarmsize=swarmsize,maxiter=maxiter)
+        return params
+
+
+    def pso_opt(self,Ir,tr,omega=0.5, phip=0.5, phig=0.5,swarmsize=5,maxiter=25):
+        # _(self,P,eta,alpha,S0,E0,I0,R0,beta,gamma,sigma,mu):
+        # def integr_RK4(self,t0,T,h,E0init=False):        
+        def opti(x):
+            model = SEIR(self.P,self.eta,self.alpha,self.S0,self.E0,self.I0,self.R0,x[0],x[1],x[2],x[3])
+            model.integr_RK4(self.t0,self.T,self.h,True)
+            return(self.objective_funct(Ir,tr,model.I,model.t,2))  
+            
+        lb=[min(self.beta_r),min(self.sigma_r),min(self.gamma_r),min(self.mu_r)]
+        ub=[max(self.beta_r),max(self.sigma_r),max(self.gamma_r),max(self.mu_r)]
+        
+        xopt, fopt = pso(opti, lb, ub, minfunc=1, omega=omega, phip=phip, phig=phig, debug=True,swarmsize=swarmsize,maxiter=maxiter)
+        return [xopt,fopt]
 
 
     def mesh(self,Npoints):

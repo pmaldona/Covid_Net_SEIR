@@ -7,7 +7,7 @@ Created on Tue Apr  7 23:28:59 2020
 """
 
 import numpy as np
-from scikits.odes.odeint import odeint
+#from scikits.odes.odeint import odeint
 
 
 class SEIR :
@@ -51,65 +51,6 @@ class SEIR :
                 return((np.diag(eta(t))+alpha(t))*(np.eye(P.shape[1])+P))
 
             self.G=G
-
-
-        def integr(self,t0,T,h,E0init=False):
-            #integrator function that star form t0 and finish with T with h as
-            #timestep. If there aren't inital values in [t0,T] function doesn't
-            #start. Or it's start if class object is initialze.
-
-
-            if(len(self.S.shape)==1):
-                #pass if object is initalized
-                S0=self.S
-                if(E0init):
-                    E0=self.mu*self.I
-                else:
-                    E0=self.E
-                I0=self.I
-                R0=self.R
-                self.t=np.arange(t0,T+h,h)
-
-            elif((min(self.t)<=t0) & (t0<=max(self.t))):
-                #Condition over exiting time in already initialized object
-
-                #Search fot initial time
-                idx=np.searchsorted(self.t,t0)
-
-                #set initial condition
-                S0=self.S[:,idx]
-                E0=self.E[:,idx]
-                I0=self.I[:,idx]
-                R0=self.R[:,idx]
-
-                #set time grid
-                self.t=np.arange(self.t[idx],T+h,h)
-
-
-            else:
-                return()
-                
-            dim=self.S.shape[0]
-            
-            def model_SEIR_graph(t,y,ydot):
-
-                for i in range(0,dim):
-                    for j in range(0,dim):
-                        ydot[i] += -self.beta*y[i]/self.N[i] * y[j+2*dim] * self.G(t)[i][j]
-                        ydot[i+dim] += self.beta*y[i]/self.N[i] *y[j+2*dim] * self.G(t)[i][j] - self.sigma * y[j+dim]
-                        ydot[i+2*dim] += self.sigma * y[i+dim] - self.gamma * y[i+2*dim]
-                        ydot[i+3*dim] += self.gamma * y[i+2*dim]
-                    
-            
-            initcond = np.concatenate((S0, E0, I0, R0))
-            initcond = initcond.reshape(4*dim)
-            print(initcond)
-            soln = odeint(model_SEIR_graph, self.t,initcond)
-            
-            self.S = soln[:, :dim]   # all rows, 10 columns (all S, until E)
-            self.E = soln[:, dim:2*dim]
-            self.I = soln[:, 2*dim:3*dim]
-            self.R = soln[:, 3*dim:4*dim]
 
 
 
@@ -190,3 +131,61 @@ class SEIR :
             self.R=R
             return
             
+"""         def integr(self,t0,T,h,E0init=False):
+            #integrator function that star form t0 and finish with T with h as
+            #timestep. If there aren't inital values in [t0,T] function doesn't
+            #start. Or it's start if class object is initialze.
+
+
+            if(len(self.S.shape)==1):
+                #pass if object is initalized
+                S0=self.S
+                if(E0init):
+                    E0=self.mu*self.I
+                else:
+                    E0=self.E
+                I0=self.I
+                R0=self.R
+                self.t=np.arange(t0,T+h,h)
+
+            elif((min(self.t)<=t0) & (t0<=max(self.t))):
+                #Condition over exiting time in already initialized object
+
+                #Search fot initial time
+                idx=np.searchsorted(self.t,t0)
+
+                #set initial condition
+                S0=self.S[:,idx]
+                E0=self.E[:,idx]
+                I0=self.I[:,idx]
+                R0=self.R[:,idx]
+
+                #set time grid
+                self.t=np.arange(self.t[idx],T+h,h)
+
+
+            else:
+                return()
+                
+            dim=self.S.shape[0]
+            
+            def model_SEIR_graph(t,y,ydot):
+
+                for i in range(0,dim):
+                    for j in range(0,dim):
+                        ydot[i] += -self.beta*y[i]/self.N[i] * y[j+2*dim] * self.G(t)[i][j]
+                        ydot[i+dim] += self.beta*y[i]/self.N[i] *y[j+2*dim] * self.G(t)[i][j] - self.sigma * y[j+dim]
+                        ydot[i+2*dim] += self.sigma * y[i+dim] - self.gamma * y[i+2*dim]
+                        ydot[i+3*dim] += self.gamma * y[i+2*dim]
+                    
+            
+            initcond = np.concatenate((S0, E0, I0, R0))
+            initcond = initcond.reshape(4*dim)
+            print(initcond)
+            soln = odeint(model_SEIR_graph, self.t,initcond)
+            
+            self.S = soln[:, :dim]   # all rows, 10 columns (all S, until E)
+            self.E = soln[:, dim:2*dim]
+            self.I = soln[:, 2*dim:3*dim]
+            self.R = soln[:, 3*dim:4*dim]
+ """
