@@ -63,20 +63,20 @@ def eta(t):
 
 # Seir Refiner tests
 # Create param refiner object
-ref_test=SEIRrefiner(P,eta,alpha,S0,E0,I0,R0,min(tr),max(tr),0.1,b_r,g_r,s_r,mu_r)
+# ref_test=SEIRrefiner(P,eta,alpha,S0,E0,I0,R0,min(tr),max(tr),0.1,b_r,g_r,s_r,mu_r)
 
-# # Test metropolis-hastings
-# print("Metropolis-hastings")
-# ref_test.refine(Ir,0.1,100,20,1)
-# print(ref_test.params)
+# # # Test metropolis-hastings
+# # print("Metropolis-hastings")
+# # ref_test.refine(Ir,0.1,100,20,1)
+# # print(ref_test.params)
 
-#Test  PSO
-print("PSO")
-ref_test.refinepso(n,swarmsize=50,maxiter=15,omega=0.5, phip=0.5, phig=0.5)
-param=ref_test.paramsPSO
-print(param)
-d=1e-20
-ref_test2=SEIRrefiner(P,eta,alpha,S0,E0,I0,R0,min(tr),max(tr),0.1,[param[0][0]-d,param[0][0]+d],[param[0][1]-d,param[0][1]+d],[param[0][2]-d,param[0][2]+d],mu_r)
+# #Test  PSO
+# print("PSO")
+# ref_test.refinepso(n,swarmsize=50,maxiter=15,omega=0.5, phip=0.5, phig=0.5)
+# param=ref_test.paramsPSO
+# print(param)
+# d=1e-20
+ref_test2=SEIRrefiner(P,eta,alpha,S0,E0,I0,R0,min(tr),max(tr),0.1,[0.197,0.198,[0.099,0.11],[0.099,0.11],mu_r)
 ref_test2.refine(n,0.1,20,50,1)
 # Run integr
 
