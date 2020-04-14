@@ -56,7 +56,7 @@ def eta(t):
 
 # Seir Refiner tests
 # Create param refiner object
-ref_test=SEIRrefiner(P,eta,alpha,S0,2*I0,I0,R0,min(tr),max(tr),0.1,b_r,g_r,s_r,mu_r)
+ref_test=SEIRrefiner(P,eta,alpha,S0,2*I0,I0,R0,min(ta),max(ta),h,b_r,g_r,s_r,mu_r)
 
 # # # Test metropolis-hastings
 # # print("Metropolis-hastings")
