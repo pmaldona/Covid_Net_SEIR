@@ -73,10 +73,10 @@ class SEIRrefiner:
 
     def pso_opt(self,Ir,tr,omega=0.5, phip=0.5, phig=0.5,swarmsize=5,maxiter=25):
         # _(self,P,eta,alpha,S0,E0,I0,R0,beta,gamma,sigma,mu):
-        # def integr_RK4(self,t0,T,h,E0init=False):        
+        # def integr(self,t0,T,h,E0init=False):        
         def opti(x):
             model = SEIR(self.P,self.eta,self.alpha,self.S0,self.E0,self.I0,self.R0,x[0],x[1],x[2],x[3])
-            model.integr_RK4(self.t0,self.T,self.h,True)
+            model.integr(self.t0,self.T,self.h,True)
             return(self.objective_funct(Ir,tr,model.I,model.t,2))  
             
         lb=[min(self.beta_r),min(self.sigma_r),min(self.gamma_r),min(self.mu_r)]
@@ -103,7 +103,7 @@ class SEIRrefiner:
         #print("Build SEIR")
         x=SEIR(self.P,self.eta,self.alpha,self.S0,self.E0,self.I0,self.R0,beta_i,gamma_i,sigma_i,mu_i)
         #print("RK4")
-        x.integr_RK4(self.t0,self.T,self.h,True)
+        x.integr(self.t0,self.T,self.h,True)
         e_0=self.objective_funct(I_r,tr,x.I,x.t,2)
         e_o=e_0
         params = [[beta_i,sigma_i,gamma_i,mu_i,e_o]]
@@ -114,7 +114,7 @@ class SEIRrefiner:
             start = timer()
             [b_p,s_p,g_p,m_p]=self.transition_model(x.beta,x.sigma,x.gamma,x.mu,r0)
             x_new=SEIR(self.P,self.eta,self.alpha,self.S0,self.E0,self.I0,self.R0,b_p,s_p,g_p,m_p)
-            x_new.integr_RK4(self.t0,self.T,self.h,True)
+            x_new.integr(self.t0,self.T,self.h,True)
             e_n=self.objective_funct(I_r,tr,x_new.I,x_new.t,2)
             end = timer()
             print("------------------")
