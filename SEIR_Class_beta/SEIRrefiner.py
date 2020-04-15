@@ -38,10 +38,10 @@ class SEIRrefiner:
         self.optimalMH = []
         self.errorMH = []
 
-        # Montecarlo - Markov
-        self.paramsMC = []
-        self.optimalMC = []
-        self.errorMC = []
+        # Random Walk
+        self.paramsRW = []
+        self.optimalRW = []
+        self.errorRW = []
 
         # PSO
         self.paramsPSO = []
@@ -63,14 +63,14 @@ class SEIRrefiner:
 
     def refineMH(self,I_r,tr,r0,Npoints,steps,err):
         # find the optimal parameter using metropolis-hastings
+        # desnity of phase space parameter for the optimizacion of calculeted infected vs. real infected
         mesh = self.mesh(Npoints)
         # tr=np.arange(I_r.shape[1])
         results = []
-        for i in range(Npoints):
-            # print("Mesh point number "+str(i))
+        for i in range(Npoints):            
             aux = self.met_hast(I_r,tr,mesh[i][0],mesh[i][1],mesh[i][2],mesh[i][3],r0,steps,err)
             results.append(aux)
-            # print("Error: "+str(aux[-1]))
+            
         self.paramsMH = np.array(results)
         optindex = np.where(self.paramsMH[:,4]==np.amin(self.paramsMH[:,4]))[0][0]
         self.optimalMH =self.paramsMH[optindex,:]
@@ -79,23 +79,23 @@ class SEIRrefiner:
         self.SEIR = SEIR(self.P,self.eta,self.alpha,self.S0,self.E0,self.I0,self.R0,self.optimalMH[0],self.optimalMH[1],self.optimalMH[2],self.optimalMH[3])
         return self.optimalMH
 
-    def refineMC(self,I_r,tr,r0,Npoints,steps,err):
+    def refineRW(self,I_r,tr,r0,Npoints,steps,err):
         # Refine using Montecarlo - Markov Chain
         mesh = self.mesh(Npoints)
         # tr=np.arange(I_r.shape[1])
         results = []
         for i in range(Npoints):
             # print("Mesh point number "+str(i))
-            aux = self.met_hast(I_r,tr,mesh[i][0],mesh[i][1],mesh[i][2],mesh[i][3],r0,steps,err)
+            aux = self.LocMinRW(I_r,tr,mesh[i][0],mesh[i][1],mesh[i][2],mesh[i][3],r0,steps,err)
             results.append(aux)
             # print("Error: "+str(aux[-1]))
-        self.paramsMC = np.array(results)
-        optindex = np.where(self.paramsMC[:,4]==np.amin(self.paramsMC[:,4]))[0][0]
-        self.optimalMC =self.paramsMC[optindex,:]
-        self.errorMC=self.optimalMC[-1]
+        self.paramsRW = np.array(results)
+        optindex = np.where(self.paramsRW[:,4]==np.amin(self.paramsRW[:,4]))[0][0]
+        self.optimalRW =self.paramsRW[optindex,:]
+        self.errorRW=self.optimalRW[-1]
         # should define an exit protocol
-        self.SEIR = SEIR(self.P,self.eta,self.alpha,self.S0,self.E0,self.I0,self.R0,self.optimalMH[0],self.optimalMH[1],self.optimalMH[2],self.optimalMH[3])
-        return self.optimalMC
+        self.SEIR = SEIR(self.P,self.eta,self.alpha,self.S0,self.E0,self.I0,self.R0,self.optimalRW[0],self.optimalRW[1],self.optimalRW[2],self.optimalRW[3])
+        return self.optimalRW
 
     def refinepso_steps(self,Ir,swarmsize=5,maxiter=25,omega=0.5, phip=0.5, phig=0.5,iter=2):
         tr=np.arange(Ir.shape[1])
@@ -195,6 +195,57 @@ class SEIRrefiner:
     ## Definir un objeto SEIR que solo se inicialice con las variables que no cambian
     ## Luego definir uno heredado que se defina con esas variables y los parametros
     def met_hast(self,I_r,tr,beta_i,sigma_i,gamma_i,mu_i,r0,steps,err):
+        #print("Build SEIR")
+        x=SEIR(self.P,self.eta,self.alpha,self.S0,self.E0,self.I0,self.R0,beta_i,gamma_i,sigma_i,mu_i)
+        #print("RK4")
+        if x.scikitsimport:
+            x.integr(self.t0,self.T,self.h,True)
+        else:
+            #print("RK4")
+            x.integr_RK4(self.t0,self.T,self.h,True)
+        e_0=self.objective_funct(I_r,tr,x.I,x.t,2)
+        e_o=e_0
+        params = [[beta_i,sigma_i,gamma_i,mu_i,e_o]]
+        i=0
+        #print("Met-Hast")
+        while i <steps:
+            [b_p,s_p,g_p,m_p]=self.transition_model(x.beta,x.sigma,x.gamma,x.mu,r0)
+            x_new=SEIR(self.P,self.eta,self.alpha,self.S0,self.E0,self.I0,self.R0,b_p,s_p,g_p,m_p)
+            if x_new.scikitsimport:
+                x_new.integr(self.t0,self.T,self.h,True)
+            else:
+                x_new.integr_RK4(self.t0,self.T,self.h,True)
+            e_n=self.objective_funct(I_r,tr,x_new.I,x_new.t,2)
+     
+            # Acceptance
+            if(e_n/e_o<1):
+                x=x_new
+                e_o = e_n
+                params.append([b_p,s_p,g_p,m_p,e_n])
+                i+=1
+                print("------------------")
+                print(b_p,s_p,g_p,m_p)
+                print(e_o,e_n)
+                # print("time: "+str(end-start))
+                # print("Step "+str(i))
+            else:
+                u=np.random.uniform(0,1)
+                if(e_n/e_0>u):
+                    x=x_new
+                    e_o = e_n
+                    params.append([b_p,s_p,g_p,m_p,e_n])
+                    i+=1
+                    print("------------------")
+                    print(b_p,s_p,g_p,m_p)
+                    print(e_o,e_n)
+        #sleep(0.01)
+        # Dejo los params historicos por si hay que debuggear esta parte
+        return params[-1]
+
+
+    # Local Minimum Random Walk"
+    # Like a RW with bias towards the optimum
+    def LocMinRW(self,I_r,tr,beta_i,sigma_i,gamma_i,mu_i,r0,steps,err):
         #print("Build SEIR")
         x=SEIR(self.P,self.eta,self.alpha,self.S0,self.E0,self.I0,self.R0,beta_i,gamma_i,sigma_i,mu_i)
         #print("RK4")
