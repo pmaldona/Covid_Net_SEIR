@@ -21,6 +21,8 @@ if __name__ == '__main__':
     outfile = args.outputfile
     #print("Output File: %s" ,% args.outputfile)
 
+    method = "MC"
+
     """
     #---------------------#
     #     Import Data     #
@@ -84,35 +86,42 @@ if __name__ == '__main__':
     # ---------------------------- #
     #     Metropolis-Hastings      #
     # ---------------------------- # 
-    tr=np.arange(Ir.shape[1])   
-    ref_test.refineMH(Ir,tr,0.1,2,2,1)
-    print("listeilor")
-    print(ref_test.paramsMH)
-    # Save parameters 
-    print("Saving data")    
-    np.savetxt(outfile, ref_test.paramsMH, delimiter=",")
+    if "MH" in method:
+        tr=np.arange(Ir.shape[1])   
+        ref_test.refineMH(Ir,tr,0.1,2,2,1)
+        print("listeilor")
+        print(ref_test.paramsMH)
+        # Save parameters 
+        print("Saving data")    
+        np.savetxt(outfile, ref_test.paramsMH, delimiter=",")
 
     # ------------------------------ #
     #      Montecarlo - Markov       #
     # ------------------------------ # 
-    tr=np.arange(Ir.shape[1])   
-    ref_test.refineMC(Ir,tr,0.1,2,2,1)
-    print("listeilor")
-    print(ref_test.paramsMC)
-    # Save parameters 
-    print("Saving data")    
-    np.savetxt(outfile, ref_test.paramsMC, delimiter=",")
+    if "MC" in method:
+        tr=np.arange(Ir.shape[1])   
+        ref_test.refineMC(Ir,tr,0.1,2,2,1)
+        print("listeilor")
+        print(ref_test.paramsMC)
+        # Save parameters 
+        print("Saving data")    
+        np.savetxt(outfile, ref_test.paramsMC, delimiter=",")
 
-
+    
     # ---------------------------------#
     #   Particle Swarme Optimization   #
     # -------------------------------- # 
-    #Test  PSO
-    #print("PSO")
-    #ref_test.refinepso(Ir,swarmsize=2,maxiter=2,omega=0.5, phip=0.5, phig=0.5)
-    #print(ref_test.paramsPSO)
+    if "PSO" in method:
+        tr=np.arange(Ir.shape[1])  
+        ref_test.refinepso(Ir,tr,swarmsize=2,maxiter=2,omega=0.5, phip=0.5, phig=0.5)
+        print(ref_test.paramsPSO)
+        print("listeilor")
+        print(ref_test.paramsMC)
+        # Save parameters 
+        print("Saving data")    
+        np.savetxt(outfile, ref_test.paramsMC, delimiter=",")        
 
-    # Run integr
+
 
 
     # SEIR Object test
