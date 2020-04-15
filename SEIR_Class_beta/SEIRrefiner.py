@@ -240,7 +240,7 @@ class SEIRrefiner:
                     print(e_o,e_n)
         #sleep(0.01)
         # Dejo los params historicos por si hay que debuggear esta parte
-        return params[-1]
+        return params
 
 
     # Local Minimum Random Walk"

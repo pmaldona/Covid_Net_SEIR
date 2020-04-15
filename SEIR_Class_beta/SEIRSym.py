@@ -89,12 +89,12 @@ if __name__ == '__main__':
     # ---------------------------- # 
     if "MH" in method:
         tr=np.arange(Ir.shape[1])   
-        ref_test.refineMH(Ir,tr,0.1,6,1200,1)
+        ref_test.refineMH(Ir,tr,0.1,1,6400,1)
         print("listeilor")
-        print(ref_test.paramsMH)
+        print(ref_test.paramsMH[0])
         # Save parameters 
         print("Saving data")    
-        np.savetxt(outfile, ref_test.paramsMH, delimiter=",")
+        np.savetxt(outfile, ref_test.paramsMH[0], delimiter=",")
 
     # ------------------------------ #
     #        Random Walk             #
