@@ -94,7 +94,7 @@ class SEIRrefiner:
         self.optimalMC =self.paramsMC[optindex,:]
         self.errorMC=self.optimalMC[-1]
         # should define an exit protocol
-        self.SEIR = SEIR(self.P,self.eta,self.alpha,self.S0,self.E0,self.I0,self.R0,self.optimalMH[0],self.optimalMH[1],self.optimalMH[2],self.optimalMH[3])
+        self.SEIR = SEIR(self.P,self.eta,self.alpha,self.S0,self.E0,self.I0,self.R0,self.optimalMC[0],self.optimalMC[1],self.optimalMC[2],self.optimalMC[3])
         return self.optimalMC
 
     def refinepso_steps(self,Ir,swarmsize=5,maxiter=25,omega=0.5, phip=0.5, phig=0.5,iter=2):
