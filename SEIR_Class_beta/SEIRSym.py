@@ -7,11 +7,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 import argparse
-
+from timeit import default_timer as timer
 
 if __name__ == '__main__':
- 
+    start = timer()
     # Get the options from the command line
+    np.random.seed()
     print("SEIR Sym")
     parser = argparse.ArgumentParser(description='Dlab COVID SEIR Symulation ')
     parser.add_argument('-o', "--outputfile", dest="outputfile", required = True, help="Output file to store data")
@@ -21,7 +22,7 @@ if __name__ == '__main__':
     outfile = args.outputfile
     #print("Output File: %s" ,% args.outputfile)
 
-    method = "MC"
+    method = "MH"
 
     """
     #---------------------#
@@ -58,7 +59,7 @@ if __name__ == '__main__':
 
     # Parameter range 
     # If not parameter range file do this:
-    b_r=[0.1,0.3] #0.1
+    b_r=[0.1,0.3] #0.2
     s_r=[0.05,0.15] #0.1
     g_r=[0.05,0.15] #0.1
     mu_r=[1,3] #2
@@ -88,42 +89,45 @@ if __name__ == '__main__':
     # ---------------------------- # 
     if "MH" in method:
         tr=np.arange(Ir.shape[1])   
-        ref_test.refineMH(Ir,tr,0.1,2,2,1)
+        ref_test.refineMH(Ir,tr,0.1,1,6400,1)
         print("listeilor")
-        print(ref_test.paramsMH)
+        print(ref_test.paramsMH[0])
         # Save parameters 
         print("Saving data")    
-        np.savetxt(outfile, ref_test.paramsMH, delimiter=",")
+        np.savetxt(outfile, ref_test.paramsMH[0], delimiter=",")
 
     # ------------------------------ #
-    #      Montecarlo - Markov       #
+    #        Random Walk             #
     # ------------------------------ # 
-    if "MC" in method:
+    if "RW" in method:
         tr=np.arange(Ir.shape[1])   
-        ref_test.refineMC(Ir,tr,0.1,2,2,1)
+        ref_test.refineRW(Ir,tr,0.1,2,2,1)
         print("listeilor")
-        print(ref_test.paramsMC)
+        print(ref_test.paramsRW)
         # Save parameters 
         print("Saving data")    
-        np.savetxt(outfile, ref_test.paramsMC, delimiter=",")
+        np.savetxt(outfile, ref_test.paramsRW, delimiter=",")
 
     
     # ---------------------------------#
-    #   Particle Swarme Optimization   #
+    #   Particle Swarm Optimization   #
     # -------------------------------- # 
     if "PSO" in method:
         tr=np.arange(Ir.shape[1])  
         ref_test.refinepso(Ir,tr,swarmsize=2,maxiter=2,omega=0.5, phip=0.5, phig=0.5)
         print(ref_test.paramsPSO)
         print("listeilor")
-        print(ref_test.paramsMC)
+        print(ref_test.paramsPSO)
         # Save parameters 
         print("Saving data")    
-        np.savetxt(outfile, ref_test.paramsMC, delimiter=",")        
+        np.savetxt(outfile, ref_test.paramsPSO, delimiter=",")        
 
 
-
-
+    stop = timer()
+    time = stop - start
+    with open("time.txt", "w") as f:
+        f.write(str(time))
+    print(str(time))
     # SEIR Object test
     # test = SEIR(P,eta,alpha,S0,E0,I0,R0,np.mean(b_r),np.mean(g_r),np.mean(s_r),np.mean(mu_r))
     # test.integr_RK4(min(tr),max(tr),0.1,True)
