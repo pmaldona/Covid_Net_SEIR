@@ -51,7 +51,7 @@ class SEIR :
 
             #partial definition of strategy, must be improved
             def G(t):
-                return((np.diag(eta(t))+alpha(t))*(np.eye(P.shape[1])+P))
+                return(np.diag(eta(t))+alpha(t)*P)
 
             self.G=G
 
