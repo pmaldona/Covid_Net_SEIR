@@ -97,15 +97,18 @@ class SEIRrefiner:
         self.SEIR = SEIR(self.P,self.eta,self.alpha,self.S0,self.E0,self.I0,self.R0,self.optimalRW[0],self.optimalRW[1],self.optimalRW[2],self.optimalRW[3])
         return self.optimalRW
 
-    def refinepso_steps(self,Ir,swarmsize=5,maxiter=25,omega=0.5, phip=0.5, phig=0.5,iter=2):
-        tr=np.arange(Ir.shape[1])
-        #mu = np.random.uniform(min(self.mu_r),max(self.mu_r))
-        mu = 2
+    def refinepso_steps(self,Ir,tr,swarmsize=5,maxiter=25,omega=0.5, phip=0.5, phig=0.5,iter=2):
+        # tr=np.arange(Ir.shape[1])
+        # mu = np.random.uniform(min(self.mu_r),max(self.mu_r))
+        # mu = 2
+        mu=np.mean(self.mu_r)
         self.paramsPSO = self.pso_opt_coef(Ir,tr,mu,omega=omega, phip=phip, phig=phig,swarmsize=swarmsize,maxiter=maxiter)
+        
+        # self.paramsPSO = self.pso_opt_coef(Ir,tr,mu,omega=omega, phip=phip, phig=phig,swarmsize=swarmsize,maxiter=maxiter)
             
-        for i in range(iter):
-            self.paramsPSO = self.pso_opt_mu(Ir,tr,self.paramsPSO[0],self.paramsPSO[1],self.paramsPSO[2],omega=omega, phip=phip, phig=phig,swarmsize=swarmsize,maxiter=maxiter)
-            self.paramsPSO = self.pso_opt_coef(Ir,tr,self.paramsPSO[3],omega=omega, phip=phip, phig=phig,swarmsize=swarmsize,maxiter=maxiter)
+        # for i in range(iter):
+        #     self.paramsPSO = self.pso_opt_mu(Ir,tr,self.paramsPSO[0],self.paramsPSO[1],self.paramsPSO[2],omega=omega, phip=phip, phig=phig,swarmsize=swarmsize,maxiter=maxiter)
+        #     self.paramsPSO = self.pso_opt_coef(Ir,tr,self.paramsPSO[3],omega=omega, phip=phip, phig=phig,swarmsize=swarmsize,maxiter=maxiter)
         return self.paramsPSO 
 
 
@@ -150,10 +153,13 @@ class SEIRrefiner:
         lb=[min(self.beta_r),min(self.sigma_r),min(self.gamma_r)]
         ub=[max(self.beta_r),max(self.sigma_r),max(self.gamma_r)]
         
-        xopt, fopt = pso(opti, lb, ub, minfunc=1, omega=omega, phip=phip, phig=phig, debug=True,swarmsize=swarmsize,maxiter=maxiter)
+        xopt, fopt = pso(opti, lb, ub, minfunc=1e-8, omega=omega, phip=phip, phig=phig, debug=True,swarmsize=swarmsize,maxiter=maxiter)
         xopt = np.append(xopt,mu)
-        return [xopt,fopt]
-
+        xopt = np.append(xopt,fopt)
+        xopt = np.append(xopt,fopt/LA.norm(Ir,'fro'))
+        
+        return xopt
+        
     def refinepso(self,Ir,tr,swarmsize=5,maxiter=25,omega=0.5, phip=0.5, phig=0.5):
         # tr=np.arange(Ir.shape[1])
         self.paramsPSO = self.pso_opt(Ir,tr,omega=omega, phip=phip, phig=phig,swarmsize=swarmsize,maxiter=maxiter)
@@ -293,7 +299,26 @@ class SEIRrefiner:
     # objective function to minimize for any cases
     def objective_funct(self,Ir,tr,I,t,l):
         idx=np.searchsorted(t,tr)
-        #print(idx)
+        # print(idx)
+        # print(t)
+        return LA.norm(Ir-I[:,idx],l)
+
+        return LA.norm(Ir-I[:,idx],l)
+
+        return LA.norm(Ir-I[:,idx],l)
+
+        return LA.norm(Ir-I[:,idx],l)
+
+        return LA.norm(Ir-I[:,idx],l)
+
+        return LA.norm(Ir-I[:,idx],l)
+
+        return LA.norm(Ir-I[:,idx],l)
+
+        return LA.norm(Ir-I[:,idx],l)
+
+        return LA.norm(Ir-I[:,idx],l)
+
         return LA.norm(Ir-I[:,idx],l)
 
 

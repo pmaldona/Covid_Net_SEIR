@@ -19,7 +19,7 @@ class SEIR :
         #constructor of SEIR class elements, it's initialized when a parameter
         #miminization is performed to adjust the best setting of the actual infected
 
-        def __init__(self,P,eta,alpha,S0,E0,I0,R0,beta,gamma,sigma,mu):
+        def __init__(self,P,eta,alpha,S0,E0,I0,R0,beta,sigma,gamma,mu):
             self.scikitsimport = scikitsimport
             #init response values
             self.S=S0
