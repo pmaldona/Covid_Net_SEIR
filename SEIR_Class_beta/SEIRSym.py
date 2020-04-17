@@ -110,8 +110,9 @@ if __name__ == '__main__':
 
     
     # ---------------------------------#
-    #   Particle Swarm Optimization   #
+    #   Particle Swarm Optimization    #
     # -------------------------------- # 
+    # beta mu y gamma
     if "PSO" in method:
         tr=np.arange(Ir.shape[1])  
         ref_test.refinepso(Ir,tr,swarmsize=2,maxiter=2,omega=0.5, phip=0.5, phig=0.5)

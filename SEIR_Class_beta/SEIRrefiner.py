@@ -97,94 +97,109 @@ class SEIRrefiner:
         self.SEIR = SEIR(self.P,self.eta,self.alpha,self.S0,self.E0,self.I0,self.R0,self.optimalRW[0],self.optimalRW[1],self.optimalRW[2],self.optimalRW[3])
         return self.optimalRW
 
-    def refinepso_steps(self,Ir,tr,swarmsize=5,maxiter=25,omega=0.5, phip=0.5, phig=0.5,iter=2):
-        # tr=np.arange(Ir.shape[1])
-        # mu = np.random.uniform(min(self.mu_r),max(self.mu_r))
-        # mu = 2
-        mu=np.mean(self.mu_r)
-        self.paramsPSO = self.pso_opt_coef(Ir,tr,mu,omega=omega, phip=phip, phig=phig,swarmsize=swarmsize,maxiter=maxiter)
-        
-        # self.paramsPSO = self.pso_opt_coef(Ir,tr,mu,omega=omega, phip=phip, phig=phig,swarmsize=swarmsize,maxiter=maxiter)
-            
-        # for i in range(iter):
-        #     self.paramsPSO = self.pso_opt_mu(Ir,tr,self.paramsPSO[0],self.paramsPSO[1],self.paramsPSO[2],omega=omega, phip=phip, phig=phig,swarmsize=swarmsize,maxiter=maxiter)
-        #     self.paramsPSO = self.pso_opt_coef(Ir,tr,self.paramsPSO[3],omega=omega, phip=phip, phig=phig,swarmsize=swarmsize,maxiter=maxiter)
-        return self.paramsPSO 
-
-
-    def pso_opt_mu(self,Ir,tr,beta,sigma,gamma,omega=0.5, phip=0.5, phig=0.5,swarmsize=5,maxiter=25):
-        # _(self,P,eta,alpha,S0,E0,I0,R0,beta,gamma,sigma,mu):
-        # def integr(self,t0,T,h,E0init=False):        
-        def opti(x):
-            model = SEIR(self.P,self.eta,self.alpha,self.S0,self.E0,self.I0,self.R0,beta,sigma,gamma,x)
-            model.integr(self.t0,self.T,self.h,True)
-            
-            # dim=model.S.shape
-            # n=np.zeros((4*dim[0],dim[1]))
-            # n[0:dim[0],:]=model.S
-            # n[dim[0]:2*dim[0],:]=model.E
-            # n[2*dim[0]:3*dim[0],:]=model.I
-            # n[3*dim[0]:4*dim[0],:]=model.R
-            return(self.objective_funct(Ir,tr,model.I,model.t,'fro')) 
-
-        lb=[min(self.mu_r)]
-        ub=[max(self.mu_r)]
-        
-        xopt, fopt = pso(opti, lb, ub, minfunc=1, omega=omega, phip=phip, phig=phig, debug=True,swarmsize=swarmsize,maxiter=maxiter)
-        xopt = np.append([beta,sigma,gamma],xopt)
-        return [xopt,fopt]
-        
-
-    def pso_opt_coef(self,Ir,tr,mu,omega=0.5, phip=0.5, phig=0.5,swarmsize=5,maxiter=25):
-        # _(self,P,eta,alpha,S0,E0,I0,R0,beta,gamma,sigma,mu):
-        # def integr(self,t0,T,h,E0init=False):        
-        def opti(x):
-            model = SEIR(self.P,self.eta,self.alpha,self.S0,self.E0,self.I0,self.R0,x[0],x[1],x[2],mu)
-            model.integr(self.t0,self.T,self.h,True)
-            
-            # dim=model.S.shape
-            # n=np.zeros((4*dim[0],dim[1]))
-            # n[0:dim[0],:]=model.S
-            # n[dim[0]:2*dim[0],:]=model.E
-            # n[2*dim[0]:3*dim[0],:]=model.I
-            # n[3*dim[0]:4*dim[0],:]=model.R
-            return(self.objective_funct(Ir,tr,model.I,model.t,'fro')) 
-
-        lb=[min(self.beta_r),min(self.sigma_r),min(self.gamma_r)]
-        ub=[max(self.beta_r),max(self.sigma_r),max(self.gamma_r)]
-        
-        xopt, fopt = pso(opti, lb, ub, minfunc=1e-8, omega=omega, phip=phip, phig=phig, debug=True,swarmsize=swarmsize,maxiter=maxiter)
-        xopt = np.append(xopt,mu)
-        xopt = np.append(xopt,fopt)
-        xopt = np.append(xopt,fopt/LA.norm(Ir,'fro'))
-        
-        return xopt
-        
     def refinepso(self,Ir,tr,swarmsize=5,maxiter=25,omega=0.5, phip=0.5, phig=0.5):
-        # tr=np.arange(Ir.shape[1])
+
         self.paramsPSO = self.pso_opt(Ir,tr,omega=omega, phip=phip, phig=phig,swarmsize=swarmsize,maxiter=maxiter)
         return self.paramsPSO 
 
 
     def pso_opt(self,Ir,tr,omega=0.5, phip=0.5, phig=0.5,swarmsize=5,maxiter=25):
         # _(self,P,eta,alpha,S0,E0,I0,R0,beta,gamma,sigma,mu):
-        # def integr(self,t0,T,h,E0init=False):          
-        def opti(x):
-            model = SEIR(self.P,self.eta,self.alpha,self.S0,self.E0,self.I0,self.R0,x[0],x[1],x[2],x[3])
-            model.integr(self.t0,self.T,self.h,True)
-            # dim=model.S.shape
-            # n=np.zeros((4*dim[0],dim[1]))
-            # n[0:dim[0],:]=model.S
-            # n[dim[0]:2*dim[0],:]=model.E
-            # n[2*dim[0]:3*dim[0],:]=model.I
-            # n[3*dim[0]:4*dim[0],:]=model.R
-            return(self.objective_funct(Ir,tr,model.I,model.t,'fro'))  
-            
-        lb=[min(self.beta_r),min(self.sigma_r),min(self.gamma_r),min(self.mu_r)]
-        ub=[max(self.beta_r),max(self.sigma_r),max(self.gamma_r),max(self.mu_r)]
+        # def integr(self,t0,T,h,E0init=False):  
         
-        xopt, fopt = pso(opti, lb, ub, minfunc=1, omega=omega, phip=phip, phig=phig, debug=True,swarmsize=swarmsize,maxiter=maxiter)
-        return [xopt,fopt]
+        lb = []
+        ub = []
+
+        # Beta
+        if type(self.beta_r) == list:            
+            lb.append(min(self.beta_r))
+            ub.append(max(self.beta_r))  
+        # Sigma
+        if type(self.sigma_r) == list:            
+            lb.append(min(self.sigma_r))
+            ub.append(max(self.sigma_r))                    
+        # Gamma
+        if type(self.gamma_r) == list:
+            lb.append(min(self.gamma_r))
+            ub.append(max(self.gamma_r))                
+        # Mu
+        if type(self.mu_r) == list:
+            lb.append(min(self.mu_r))
+            ub.append(max(self.mu_r))                
+
+        print(lb)
+        print(ub)            
+      
+        def opti(x):
+            i = 0
+            aux =[0,0,0,0]            
+            # Beta
+            if type(self.beta_r) == list:
+                aux[0] = x[i]
+                i+=1                
+            else: 
+                aux[0] = self.beta_r            
+            # Sigma
+            if type(self.sigma_r) == list:
+                aux[1] = x[i]                 
+                i+=1                                
+            else: 
+                aux[1] = self.sigma_r            
+            # Gamma
+            if type(self.gamma_r) == list:
+                aux[2] = x[i]             
+                i+=1                                
+            else: 
+                aux[2] = self.gamma_r
+            # Mu
+            if type(self.mu_r) == list:
+                aux[3] = x[i]              
+                i+=1                                
+            else: 
+                aux[3] = self.mu_r                
+
+            model = SEIR(self.P,self.eta,self.alpha,self.S0,self.E0,self.I0,self.R0,aux[0],aux[1],aux[2],aux[3])
+            model.integr(self.t0,self.T,self.h,True)
+            
+
+            return(self.objective_funct(Ir,tr,model.I,model.t,'fro')) 
+
+        
+        xopt, fopt = pso(opti, lb, ub, minfunc=1e-8, omega=omega, phip=phip, phig=phig, debug=True,swarmsize=swarmsize,maxiter=maxiter)
+        
+        aux = [0,0,0,0]
+        i = 0
+        if type(self.beta_r) == list:
+            aux[0] = xopt[i]
+            i+=1                
+        else: 
+            aux[0] = self.beta_r
+        
+        # Sigma
+        if type(self.sigma_r) == list:
+            aux[1] = xopt[i]
+            i+=1                                
+        else: 
+            aux[1] = self.sigma_r   
+        
+        # Gamma
+        if type(self.gamma_r) == list:
+            aux[2] = xopt[i]              
+            i+=1                                
+        else: 
+            aux[2] = self.gamma_r
+
+        # Mu
+        if type(self.mu_r) == list:
+            aux[3] = xopt[i]
+            i+=1                                                  
+        else: 
+            aux[3] = self.mu_r                
+
+        aux = np.append(aux,fopt)
+        aux = np.append(aux,fopt/LA.norm(Ir,'fro')) #Porcentual error
+        
+        return aux
 
 
     def mesh(self,Npoints):

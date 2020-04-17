@@ -78,16 +78,18 @@ if __name__ == '__main__':
     # g_r=[0.13,0.285]
     # m_r=[1,3]
     
-    b_r=[0.01,1] #0.2
-    s_r=[0.01,1] #0.1
-    g_r=[0.01,0.8] #0.1
-    mu_r=[1,3] #2
-
+    b_r=[0.01,3.5] #0.2
+    s_r=0.2 #  5 dias
+    g_r=0.07 # 14 dias
+    mu_r=[1.5,5.5] #2
+    # esto es por el input de SEIRrefinder que necesita un intervalo
+    # tenemos que cambiar la funcion optimizacion, podrimaos moificar la función mu
+    # 
 
     # Strategy functions
     # Adaptar shape de estas funciones dependiendo del porte de la data
     def alpha(t):
-        return(np.ones([5,5])-np.eye(5))
+        return(0.2*np.ones([5,5]))
 
     def eta(t):
         return(np.ones(5))
@@ -102,7 +104,7 @@ if __name__ == '__main__':
     # ---------------------------- #
     # Create param refiner object  #
     # ---------------------------- #
-    ref_test=SEIRrefiner(P,eta,alpha,S0,E0,I0,R0,min(tr),max(tr),0.1,b_r,s_r,g_r,[float(outfile),float(outfile)])
+    ref_test=SEIRrefiner(P,eta,alpha,S0,E0,I0,R0,min(tr),max(tr),0.1,b_r,s_r,g_r,float(outfile))
 
     # # ---------------------------- #
     # #     Metropolis-Hastings      #
@@ -136,7 +138,7 @@ if __name__ == '__main__':
         tr=np.arange(Ir.shape[1])
         params=[]
         for i in range(int(rep)):  
-            ref_test.refinepso_steps(Ir,tr,swarmsize=100,maxiter=30,omega=0.5, phip=0.5, phig=0.5)
+            ref_test.refinepso(Ir,tr,swarmsize=100,maxiter=30,omega=0.5, phip=0.5, phig=0.5)
             params.append(ref_test.paramsPSO)
         # print(params)
         print("listeilor")

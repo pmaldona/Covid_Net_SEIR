@@ -30,7 +30,7 @@ class SEIR :
             
             #init of strategy used for the dynamics
             self.strat_prop(P,alpha,eta)
-
+            print(self.G(1))
             #saved stragegy functions
             self.alpha=alpha
             self.eta=eta
