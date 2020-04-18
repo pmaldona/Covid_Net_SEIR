@@ -61,7 +61,7 @@ if __name__ == '__main__':
     # I0 = Io[:,0]
     # R0 = Ro[:,0]
 
-    S0 = So
+    S0 = So -Eo -Io
     E0 = Eo
     I0 = Io
     R0 = Ro
@@ -138,7 +138,7 @@ if __name__ == '__main__':
         tr=np.arange(Ir.shape[1])
         params=[]
         for i in range(int(rep)):  
-            ref_test.refinepso(Ir,tr,swarmsize=100,maxiter=30,omega=0.5, phip=0.5, phig=0.5)
+            ref_test.refinepso(Ir,tr,swarmsize=100,maxiter=50,omega=0.5, phip=0.5, phig=0.5,obj_func='IR')
             params.append(ref_test.paramsPSO)
         # print(params)
         print("listeilor")
