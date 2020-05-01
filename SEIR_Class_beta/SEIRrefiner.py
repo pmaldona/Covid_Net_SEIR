@@ -6,10 +6,7 @@ Implementation of a Metropolis-Hasting model
 """
 from class_SEIR import SEIR
 import numpy as np
-import pandas
 from numpy import linalg as LA
-from time import sleep
-from timeit import default_timer as timer
 from pyswarm import pso
 
 class SEIRrefiner:
@@ -124,11 +121,402 @@ class SEIRrefiner:
         self.errorPSO = self.paramsPSO[-1]
         return self.paramsPSO 
 
+    def refinepso_all(self,Ir,tr,swarmsize=5,maxiter=25,omega=0.5, phip=0.5, phig=0.5,eta_r=[0,10],Q_r=[0,10],obj_func='IN'):
+        if obj_func == 'IN':
+            objective_function = self.objective_funct_I_Norm
+        elif obj_func == 'IR':
+            objective_function = self.objective_funct_I_rate
+
+        self.paramsPSO = self.pso_opt_all(Ir,tr,objective_function,omega, phip, phig,swarmsize,maxiter,eta_r=[0,2],Q_r=[0,1])
+        self.optimalRW = self.paramsPSO
+        self.errorPSO = self.paramsPSO[-1]
+        return self.paramsPSO 
+    
+    def refinepso_eta(self,Ir,tr,swarmsize=5,maxiter=25,omega=0.5, phip=0.5, phig=0.5,eta_r=[0,10],obj_func='IN'):
+        if obj_func == 'IN':
+            objective_function = self.objective_funct_I_Norm
+        elif obj_func == 'IR':
+            objective_function = self.objective_funct_I_rate
+
+        self.paramsPSO = self.pso_opt_eta(Ir,tr,objective_function,omega, phip, phig,swarmsize,maxiter,eta_r=[0,2])
+        self.optimalRW = self.paramsPSO
+        self.errorPSO = self.paramsPSO[-1]
+        return self.paramsPSO
+    
+    def refinepso_alpha(self,Ir,tr,swarmsize=5,maxiter=25,omega=0.5, phip=0.5, phig=0.5,Q_r=[0,10],obj_func='IN'):
+        if obj_func == 'IN':
+            objective_function = self.objective_funct_I_Norm
+        elif obj_func == 'IR':
+            objective_function = self.objective_funct_I_rate
+
+        self.paramsPSO = self.pso_opt_alpha(Ir,tr,objective_function,omega, phip, phig,swarmsize,maxiter,Q_r=[0,1])
+        self.optimalRW = self.paramsPSO
+        self.errorPSO = self.paramsPSO[-1]
+        return self.paramsPSO 
     """
     # ------------------------------- #
     #   Params Optimization Methods   #
     # ------------------------------- #
     """
+    
+
+    
+    # Particle Swarm Method
+    def pso_opt_all(self,Ir,tr,objective_funct,omega=0.5, phip=0.5, phig=0.5,swarmsize=5,maxiter=25,eta_r=[0,2],Q_r=[0,1]):
+        # _(self,P,eta,alpha,S0,E0,I0,R0,beta,gamma,sigma,mu):
+        # def integr(self,t0,T,h,E0init=False):  
+        
+        lb = []
+        ub = []
+
+        # Beta
+        if type(self.beta_r) == list:            
+            lb.append(min(self.beta_r))
+            ub.append(max(self.beta_r))  
+        # Sigma
+        if type(self.sigma_r) == list:            
+            lb.append(min(self.sigma_r))
+            ub.append(max(self.sigma_r))                    
+        # Gamma
+        if type(self.gamma_r) == list:
+            lb.append(min(self.gamma_r))
+            ub.append(max(self.gamma_r))                
+        # Mu
+        if type(self.mu_r) == list:
+            lb.append(min(self.mu_r))
+            ub.append(max(self.mu_r))                
+        
+        for j in range(self.P.shape[0]):
+            lb.append(min(eta_r))
+            ub.append(max(eta_r))
+        
+        for j in range(self.P.shape[0]):
+            lb.append(min(Q_r))
+            ub.append(max(Q_r))
+              
+        
+        def opti(x):
+            i = 0
+            aux =[0,0,0,0]            
+            # Beta
+            if type(self.beta_r) == list:
+                aux[0] = x[i]
+                i+=1                
+            else: 
+                aux[0] = self.beta_r            
+            # Sigma
+            if type(self.sigma_r) == list:
+                aux[1] = x[i]                 
+                i+=1                                
+            else: 
+                aux[1] = self.sigma_r            
+            # Gamma
+            if type(self.gamma_r) == list:
+                aux[2] = x[i]             
+                i+=1                                
+            else: 
+                aux[2] = self.gamma_r
+            # Mu
+            if type(self.mu_r) == list:
+                aux[3] = x[i]              
+                i+=1                                
+            else: 
+                aux[3] = self.mu_r                
+            ie=0
+            ie=i
+            def eta(t):
+                eta=np.ones(self.P.shape[0])
+                for j in range(self.P.shape[0]):
+                    eta[j]=x[ie+j]
+                return(eta)
+            self.eta=eta
+            
+            ia=0
+            ia=ie+self.P.shape[0]
+
+            def alpha(t):
+                alpha=np.zeros([self.P.shape[0],self.P.shape[0]])
+                for j in range(self.P.shape[0]):
+                     for k in range(self.P.shape[0]):
+                         alpha[j][k]=x[j+ia]*x[k+ia]
+                return(alpha)
+
+            self.alpha=alpha
+            
+            model = SEIR(self.P,eta,alpha,self.S0,self.E0,self.I0,self.R0,aux[0],aux[1],aux[2],aux[3])
+            model.integr(self.t0,self.T,self.h,True)
+            self.eta=eta
+            self.alpha=alpha
+
+            return(objective_funct(Ir,tr,model.I,model.t,'fro')) 
+
+        
+        xopt, fopt = pso(opti, lb, ub, minfunc=1e-8, omega=omega, phip=phip, phig=phig,swarmsize=swarmsize,maxiter=maxiter)
+        
+        aux = [0,0,0,0]
+        i = 0
+        if type(self.beta_r) == list:
+            aux[0] = xopt[i]
+            i+=1                
+        else: 
+            aux[0] = self.beta_r
+        
+        # Sigma
+        if type(self.sigma_r) == list:
+            aux[1] = xopt[i]
+            i+=1                                
+        else: 
+            aux[1] = self.sigma_r   
+        
+        # Gamma
+        if type(self.gamma_r) == list:
+            aux[2] = xopt[i]              
+            i+=1                                
+        else: 
+            aux[2] = self.gamma_r
+
+        # Mu
+        if type(self.mu_r) == list:
+            aux[3] = xopt[i]
+            i+=1                                                  
+        else: 
+            aux[3] = self.mu_r                
+            
+        for j in range(len(xopt)-i):
+            aux=np.append(aux,xopt[j+i])
+            
+        aux = np.append(aux,fopt)
+        aux = np.append(aux,fopt/LA.norm(Ir,'fro')) #Porcentual error
+        
+        return aux
+
+        # Particle Swarm Method
+    def pso_opt_eta(self,Ir,tr,objective_funct,omega=0.5, phip=0.5, phig=0.5,swarmsize=5,maxiter=25,eta_r=[0,2]):
+        # _(self,P,eta,alpha,S0,E0,I0,R0,beta,gamma,sigma,mu):
+        # def integr(self,t0,T,h,E0init=False):  
+        
+        lb = []
+        ub = []
+
+        # Beta
+        if type(self.beta_r) == list:            
+            lb.append(min(self.beta_r))
+            ub.append(max(self.beta_r))  
+        # Sigma
+        if type(self.sigma_r) == list:            
+            lb.append(min(self.sigma_r))
+            ub.append(max(self.sigma_r))                    
+        # Gamma
+        if type(self.gamma_r) == list:
+            lb.append(min(self.gamma_r))
+            ub.append(max(self.gamma_r))                
+        # Mu
+        if type(self.mu_r) == list:
+            lb.append(min(self.mu_r))
+            ub.append(max(self.mu_r))                
+        
+        for j in range(self.P.shape[0]):
+            lb.append(min(eta_r))
+            ub.append(max(eta_r))
+        
+
+        def opti(x):
+            i = 0
+            aux =[0,0,0,0]            
+            # Beta
+            if type(self.beta_r) == list:
+                aux[0] = x[i]
+                i+=1                
+            else: 
+                aux[0] = self.beta_r            
+            # Sigma
+            if type(self.sigma_r) == list:
+                aux[1] = x[i]                 
+                i+=1                                
+            else: 
+                aux[1] = self.sigma_r            
+            # Gamma
+            if type(self.gamma_r) == list:
+                aux[2] = x[i]             
+                i+=1                                
+            else: 
+                aux[2] = self.gamma_r
+            # Mu
+            if type(self.mu_r) == list:
+                aux[3] = x[i]              
+                i+=1                                
+            else: 
+                aux[3] = self.mu_r                
+            
+            ie=0
+            ie=i
+            def eta(t):
+                eta=np.ones(self.P.shape[0])
+                for j in range(self.P.shape[0]):
+                    eta[j]=x[ie+j]
+                return(eta)
+            
+            model = SEIR(self.P,eta,self.alpha,self.S0,self.E0,self.I0,self.R0,aux[0],aux[1],aux[2],aux[3])
+            model.integr(self.t0,self.T,self.h,True)
+            self.eta=eta
+
+            return(objective_funct(Ir,tr,model.I,model.t,'fro')) 
+
+        # Refine Eta - Alpha is fixed 
+        xopt, fopt = pso(opti, lb, ub, minfunc=1e-8, omega=omega, phip=phip, phig=phig,swarmsize=swarmsize,maxiter=maxiter)
+        
+        aux = [0,0,0,0]
+        i = 0
+        if type(self.beta_r) == list:
+            aux[0] = xopt[i]
+            i+=1                
+        else: 
+            aux[0] = self.beta_r
+        
+        # Sigma
+        if type(self.sigma_r) == list:
+            aux[1] = xopt[i]
+            i+=1                                
+        else: 
+            aux[1] = self.sigma_r   
+        
+        # Gamma
+        if type(self.gamma_r) == list:
+            aux[2] = xopt[i]              
+            i+=1                                
+        else: 
+            aux[2] = self.gamma_r
+
+        # Mu
+        if type(self.mu_r) == list:
+            aux[3] = xopt[i]
+            i+=1                                                  
+        else: 
+            aux[3] = self.mu_r                
+            
+        for j in range(len(xopt)-i):
+            aux=np.append(aux,xopt[j+i])
+            
+        aux = np.append(aux,fopt)
+        aux = np.append(aux,fopt/LA.norm(Ir,'fro')) #Porcentual error
+        
+        return aux
+
+    
+    
+    def pso_opt_alpha(self,Ir,tr,objective_funct,omega=0.5, phip=0.5, phig=0.5,swarmsize=5,maxiter=25,Q_r=[0,1]):
+        # _(self,P,eta,alpha,S0,E0,I0,R0,beta,gamma,sigma,mu):
+        # def integr(self,t0,T,h,E0init=False):  
+        
+        lb = []
+        ub = []
+
+        # Beta
+        if type(self.beta_r) == list:            
+            lb.append(min(self.beta_r))
+            ub.append(max(self.beta_r))  
+        # Sigma
+        if type(self.sigma_r) == list:            
+            lb.append(min(self.sigma_r))
+            ub.append(max(self.sigma_r))                    
+        # Gamma
+        if type(self.gamma_r) == list:
+            lb.append(min(self.gamma_r))
+            ub.append(max(self.gamma_r))                
+        # Mu
+        if type(self.mu_r) == list:
+            lb.append(min(self.mu_r))
+            ub.append(max(self.mu_r))                
+        
+        
+        for j in range(self.P.shape[0]):
+            lb.append(min(Q_r))
+            ub.append(max(Q_r))
+              
+        
+        def opti(x):
+            i = 0
+            aux =[0,0,0,0]            
+            # Beta
+            if type(self.beta_r) == list:
+                aux[0] = x[i]
+                i+=1                
+            else: 
+                aux[0] = self.beta_r            
+            # Sigma
+            if type(self.sigma_r) == list:
+                aux[1] = x[i]                 
+                i+=1                                
+            else: 
+                aux[1] = self.sigma_r            
+            # Gamma
+            if type(self.gamma_r) == list:
+                aux[2] = x[i]             
+                i+=1                                
+            else: 
+                aux[2] = self.gamma_r
+            # Mu
+            if type(self.mu_r) == list:
+                aux[3] = x[i]              
+                i+=1                                
+            else: 
+                aux[3] = self.mu_r                
+
+            ia=i
+            def alpha(t):
+                alpha=np.zeros([self.P.shape[0],self.P.shape[0]])
+                for j in range(self.P.shape[0]):
+                     for k in range(self.P.shape[0]):
+                         alpha[j][k]=x[j+ia]*x[k+ia]
+                return(alpha)
+
+            
+            model = SEIR(self.P,self.eta,alpha,self.S0,self.E0,self.I0,self.R0,aux[0],aux[1],aux[2],aux[3])
+            model.integr(self.t0,self.T,self.h,True)
+            self.alpha=alpha
+
+            return(objective_funct(Ir,tr,model.I,model.t,'fro')) 
+
+        
+        xopt, fopt = pso(opti, lb, ub, minfunc=1e-8, omega=omega, phip=phip, phig=phig,swarmsize=swarmsize,maxiter=maxiter)
+        
+        aux = [0,0,0,0]
+        i = 0
+        if type(self.beta_r) == list:
+            aux[0] = xopt[i]
+            i+=1                
+        else: 
+            aux[0] = self.beta_r
+        
+        # Sigma
+        if type(self.sigma_r) == list:
+            aux[1] = xopt[i]
+            i+=1                                
+        else: 
+            aux[1] = self.sigma_r   
+        
+        # Gamma
+        if type(self.gamma_r) == list:
+            aux[2] = xopt[i]              
+            i+=1                                
+        else: 
+            aux[2] = self.gamma_r
+
+        # Mu
+        if type(self.mu_r) == list:
+            aux[3] = xopt[i]
+            i+=1                                                  
+        else: 
+            aux[3] = self.mu_r                
+            
+        for j in range(len(xopt)-i):
+            aux=np.append(aux,xopt[j+i])
+            
+        aux = np.append(aux,fopt)
+        aux = np.append(aux,fopt/LA.norm(Ir,'fro')) #Porcentual error
+        
+        return aux
+
     # Particle Swarm Method
     def pso_opt(self,Ir,tr,objective_funct,omega=0.5, phip=0.5, phig=0.5,swarmsize=5,maxiter=25):
         # _(self,P,eta,alpha,S0,E0,I0,R0,beta,gamma,sigma,mu):
@@ -228,7 +616,8 @@ class SEIRrefiner:
         
         return aux
 
-
+    
+    
     # Metropolis Hastings
     def met_hast(self,I_r,tr,beta_i,sigma_i,gamma_i,mu_i,r0,steps,err,objective_funct):
         #print("Build SEIR")
@@ -357,10 +746,7 @@ class SEIRrefiner:
             rate_t[i]=(rate[0]-It[i]/It[i-1])/rate[0]
             av[i]=np.mean(rate[0:i])
             av_t[i]=np.mean(rate_t[0:i])
-        
-        print("av_t - av")
-        print(av_t-av)
-        print((av_t-av).shape)
+
         return LA.norm(av_t-av)
 
     

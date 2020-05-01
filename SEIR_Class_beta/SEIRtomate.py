@@ -89,10 +89,10 @@ if __name__ == '__main__':
     # Strategy functions
     # Adaptar shape de estas funciones dependiendo del porte de la data
     def alpha(t):
-        return(0.2*np.ones([5,5]))
+        return(0.5*np.ones([t,t]))
 
     def eta(t):
-        return(np.ones(5))
+        return(np.ones(t))
 
     # Object init
 
