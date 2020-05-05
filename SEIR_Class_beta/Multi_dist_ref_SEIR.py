@@ -16,20 +16,20 @@ import datetime as dt
 from scipy import signal
 
 def refine_multi(state,comunas):
-    
-#Endpoint encuesta SETRA, no funcional aún
-#    endpoint="http://192.168.2.223:5004/v1/get_movilidad_por_comuna"
-#    r = requests.get(endpoint) #, params = {"w":"774508"})
-#    mydict = r.json()
-#    OD=pd.DataFrame(mydict)
-    
-#Endpoint encuensta ENE    
-#    endpoint="http://192.168.2.223:5004/v2/get_movilidad?month=1&year=2019"
-#    r = requests.get(endpoint) #, params = {"w":"774508"})
-#    mydict = r.json()
-#    info=pd.DataFrame(mydict)
-    
-# Data csv encuenstra Sectra (funcional)
+        
+    #Endpoint encuesta SETRA, no funcional aún
+    #    endpoint="http://192.168.2.223:5004/v1/get_movilidad_por_comuna"
+    #    r = requests.get(endpoint) #, params = {"w":"774508"})
+    #    mydict = r.json()
+    #    OD=pd.DataFrame(mydict)
+        
+    #Endpoint encuensta ENE    
+    #    endpoint="http://192.168.2.223:5004/v2/get_movilidad?month=1&year=2019"
+    #    r = requests.get(endpoint) #, params = {"w":"774508"})
+    #    mydict = r.json()
+    #    info=pd.DataFrame(mydict)
+        
+    # Data csv encuenstra Sectra (funcional)
     path="../Data/"
     OD=pd.read_csv(path+"Movilidad_diaria_comuna.csv",index_col=0)
     P=OD.filter(comunas) 
@@ -117,7 +117,7 @@ def refine_multi(state,comunas):
 
     h=0.05
 
-#    b_r=[0.01,3.5] #0.2
+    #b_r=[0.01,3.5] #0.2
     b_r=0.2 #0.2
     s_r=[0.16,0.25] #  5 dias
     g_r=[0.03,0.14] # 14 dias
@@ -140,7 +140,7 @@ def refine_multi(state,comunas):
     def rep_fun_eta(mu,rep):
         out=[] 
         for i in range(int(rep)):  
-#                ref_test.refinepso_all(Ir,tr,swarmsize=100,maxiter=50,omega=0.5, phip=0.5, phig=0.5,eta_r=[0,10],Q_r=[0,10],obj_func='IR')
+            #ref_test.refinepso_all(Ir,tr,swarmsize=100,maxiter=50,omega=0.5, phip=0.5, phig=0.5,eta_r=[0,10],Q_r=[0,10],obj_func='IR')
             ref_test=SEIRrefiner(P,eta,alpha,S0,E0,I0,R0,min(tr),max(tr),h,b_r,s_r,g_r,mu)
             ref_test.refinepso_eta(Ir,tr,swarmsize=200,maxiter=100,omega=0.5, phip=0.5, phig=0.5,eta_r=[0,10],obj_func='IN')
             out.append(ref_test.paramsPSO)
@@ -148,7 +148,7 @@ def refine_multi(state,comunas):
     
     num_cores = multiprocessing.cpu_count()
     
-#        params=Parallel(n_jobs=num_cores, verbose=50)(delayed(ref_test.refinepso_all)(Ir,tr,swarmsize=200,maxiter=50,omega=0.5, phip=0.5, phig=0.5,eta_r=[0,1],Q_r=[0,1],obj_func='IN')for i in range(int(rep)))
+    #params=Parallel(n_jobs=num_cores, verbose=50)(delayed(ref_test.refinepso_all)(Ir,tr,swarmsize=200,maxiter=50,omega=0.5, phip=0.5, phig=0.5,eta_r=[0,1],Q_r=[0,1],obj_func='IN')for i in range(int(rep)))
     params=Parallel(n_jobs=num_cores, verbose=50)(delayed(rep_fun_eta)(i,rep)for i in np.linspace(min(mu_r),max(mu_r),num_cores))
     params=np.vstack( params )
     
@@ -157,7 +157,7 @@ def refine_multi(state,comunas):
     if len(ind[0])>0: 
         for i in range(len(ind[0])):
             cand=np.random.choice(ind[0])
-            if np.all(params[cand,4:9]!=0):
+            if np.all(params[cand,4:Ic.shape[1]+4]!=0):
                 params_e=params[cand,:]
                 alpha_test=True
                 print(params_e)
@@ -169,20 +169,21 @@ def refine_multi(state,comunas):
                 break
     if not alpha_test:
 
-        f_params=params_e[0:9]
+        f_params=params_e[0:Ic.shape[1]+4]
         print(f_params)
-        f_params=np.append(f_params,np.zeros(5))
+        f_params=np.append(f_params,np.zeros(Ic.shape[1]))
         print(f_params)
-        f_params=np.append(f_params,params_e[10:11])
+        f_params=np.append(f_params,params_e[Ic.shape[1]+5:Ic.shape[1]+6])
         
     else:
+        # Update eta function
         def eta(t):
-            return(params_e[4:9])
+            return(params_e[4:Ic.shape[1]+4])
         
         def rep_fun_alpha(mu,rep):
             out=[] 
             for i in range(int(rep)):  
-#                ref_test.refinepso_all(Ir,tr,swarmsize=100,maxiter=50,omega=0.5, phip=0.5, phig=0.5,eta_r=[0,10],Q_r=[0,10],obj_func='IR')
+                #ref_test.refinepso_all(Ir,tr,swarmsize=100,maxiter=50,omega=0.5, phip=0.5, phig=0.5,eta_r=[0,10],Q_r=[0,10],obj_func='IR')
                 ref_test=SEIRrefiner(P,eta,alpha,S0,E0,I0,R0,min(tr),max(tr),h,b_r,s_r,g_r,mu)
                 ref_test.refinepso_alpha(Ir,tr,swarmsize=200,maxiter=100,omega=0.5, phip=0.5, phig=0.5,Q_r=[0,1],obj_func='IN')
                 out.append(ref_test.paramsPSO)
@@ -198,7 +199,7 @@ def refine_multi(state,comunas):
         if len(ind[0])>0: 
             for i in range(len(ind[0])):
                 cand=np.random.choice(ind[0])
-                if np.any(params[cand,4:9]!=0):
+                if np.any(params[cand,4:Ic.shape[1]+4]!=0):
                     params_a=params[cand,:]
                     alpha_test=True
                     print("ind encontrado")
@@ -212,15 +213,15 @@ def refine_multi(state,comunas):
         print(params_a)
         print(params_a[0:4])
         f_params=params_a[0:4]
-        print(f_params,params_e[4:9])
-        f_params=np.append(f_params,params_e[4:9])
-        print(f_params,params_a[4:11])
-        f_params=np.append(f_params,params_a[4:11])
+        print(f_params,params_e[4:Ic.shape[1]+4])
+        f_params=np.append(f_params,params_e[4:Ic.shape[1]+4])
+        print(f_params,params_a[4:Ic.shape[1]+6])
+        f_params=np.append(f_params,params_a[4:Ic.shape[1]+6])
         
     return({'params':f_params,'init_date':init_date})
     
 def simulate_multi(state,comunas,params,qp=0,mov=0.2,tsim=300,tci=None,movfunct='sawtooth'):
-
+    # params = beta sigma gamma mu
     # Movility function shape
     if movfunct == 'sawtooth':
         def f(t): 
@@ -244,19 +245,19 @@ def simulate_multi(state,comunas,params,qp=0,mov=0.2,tsim=300,tci=None,movfunct=
                     return((1-mov)/2*(f(np.pi / qp * t - np.pi))+(1+mov)/2)
     
 
-#Endpoint encuesta SECTR, no funcional aún
-#    endpoint="http://192.168.2.223:5004/v1/get_movilidad_por_comuna"
-#    r = requests.get(endpoint) #, params = {"w":"774508"})
-#    mydict = r.json()
-#    OD=pd.DataFrame(mydict)
-    
-#Endpoint encuensta ENE    
-#    endpoint="http://192.168.2.223:5004/v2/get_movilidad?month=1&year=2019"
-#    r = requests.get(endpoint) #, params = {"w":"774508"})
-#    mydict = r.json()
-#    info=pd.DataFrame(mydict)
-    
-# Data csv encuenstra Sectra (funcional)
+    #Endpoint encuesta SECTR, no funcional aún
+    #    endpoint="http://192.168.2.223:5004/v1/get_movilidad_por_comuna"
+    #    r = requests.get(endpoint) #, params = {"w":"774508"})
+    #    mydict = r.json()
+    #    OD=pd.DataFrame(mydict)
+        
+    #Endpoint encuensta ENE    
+    #    endpoint="http://192.168.2.223:5004/v2/get_movilidad?month=1&year=2019"
+    #    r = requests.get(endpoint) #, params = {"w":"774508"})
+    #    mydict = r.json()
+    #    info=pd.DataFrame(mydict)
+        
+    # Data csv encuenstra Sectra (funcional)
     path="../Data/"
     OD=pd.read_csv(path+"Movilidad_diaria_comuna.csv",index_col=0)
     P=OD.filter(comunas) 
@@ -362,4 +363,7 @@ def simulate_multi(state,comunas,params,qp=0,mov=0.2,tsim=300,tci=None,movfunct=
     sim = SEIR(P,eta,alpha,S0,E0,I0,R0,params[0],params[1],params[2],params[3])
     sim.integr(min(tr),tsim,h,True)
 
-    return({'S':sim.S,'E':sim.E,'I':sim.I,'R':sim.R,'tout':sim.t})
+    return({'S':sim.S,'E':sim.E,'I':sim.I,'R':sim.R,'tout':sim.t,'init_date':init_date})
+    # Cada elemento es una matriz con las comunas en las columnas y el tiempo en las filas. El orden de las comunas
+    # Es el mismo que entra como argumento. 
+    

@@ -467,7 +467,10 @@ class SEIRrefiner:
                 alpha=np.zeros([self.P.shape[0],self.P.shape[0]])
                 for j in range(self.P.shape[0]):
                      for k in range(self.P.shape[0]):
-                         alpha[j][k]=x[j+ia]*x[k+ia]
+                        if j==k:
+                            alpha[j][k]=0
+                        else:         
+                            alpha[j][k]=x[j+ia]*x[k+ia]
                 return(alpha)
 
             

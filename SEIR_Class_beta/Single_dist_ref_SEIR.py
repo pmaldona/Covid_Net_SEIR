@@ -31,10 +31,19 @@ def intger(Si,Ei,Ii,Ri,ti,T,h,beta,sigma,gamma,mov,qp=0,tci=None, movfunct = 'sa
         def f(t):
             return signal.square(t)
     
-    if qp <=0:
+    if qp ==0:
         def e_fun(t):
             return(1)
-    
+    elif qp == -1:
+        if tci is None:
+            def e_fun(t):
+                return(mov)
+        else:
+            def e_fun(t):
+                if t<tci:
+                    return(1)
+                else:
+                    return(mov)
     elif tci is None:        
         def e_fun(t):
             return((1-mov)/2*(f(np.pi / qp * t - np.pi))+(1+mov)/2)
@@ -69,7 +78,7 @@ def intger(Si,Ei,Ii,Ri,ti,T,h,beta,sigma,gamma,mov,qp=0,tci=None, movfunct = 'sa
     R = soln[:, 3]
 
     # Return info just per day
-    tout = range(int(T))
+    tout = range(int(T)+1)
     idx=np.searchsorted(t,tout)
     Sout = S[idx]
     Eout = E[idx]
@@ -189,8 +198,16 @@ def ref_sim_all(state,comuna,mov=0.2,qp=0,tsim = 300,tci=None,movfunct='sawtooth
     xopt, fopt = pso(opti, lb, ub, minfunc=1e-8, omega=0.5, phip=0.5, phig=0.5,swarmsize=100,maxiter=50)
     #print('rel_error '+str(fopt/LA.norm(Ir)))
     print('error '+str(fopt))
-    sim=intger(S0,xopt[3]*I0,I0,R0,min(tr),tsim,0.01,xopt[0],xopt[1],xopt[2],mov,qp,tr[-1],movfunct)
+    sim=intger(S0,xopt[3]*I0,I0,R0,min(tr),tsim,h,xopt[0],xopt[1],xopt[2],mov,qp,tr[-1],movfunct)
     b_date=dt.datetime.strptime(data.labels.loc[0], '%d/%m')
+
+    tout = range(int(tsim))
+    idx=np.searchsorted(t,tout)    
+    sim['S'] = sim['S'][idx]
+    sim['E'] = sim['E'][idx]
+    sim['I'] = sim['I'][idx]
+    sim['R'] = sim['R'][idx]
+    sim['t'] = tout
     return({'Ir':Ir,'tr':tr, 'params':xopt, 'err':fopt,'sim':sim, 'init_date':b_date})
     # I reales t real, parametros optimos, error, diccionario con resultado simulacion, fecha primer contagiado
 
@@ -242,19 +259,23 @@ def ref_sim_national(mov=0.2,qp=0,tsim = 300,tci=None,movfunct='sawtooth'):
     
     lb=[0.01,0.1,0.05,1.5]
     ub=[3.5,0.3,0.1,5.5]
-    
+    #(Si,Ei,Ii,Ri,ti,T,h,beta,sigma,gamma,mov,qp=0,tci=None, movfunct = 'sawtooth')
+    #(Si,Ei,Ii,Ri,ti,T,h,beta,sigma,gamma,mov,qp=0,tci=None, movfunct = 'sawtooth'):
     def opti(x):
         E0=0
         E0=x[3]*I0
-        sol=pd.DataFrame(intger(S0,E0,I0,R0,min(tr),max(tr),h,x[0],x[1],x[2],mov,qp,tr[-1],movfunct))
-        return(objective_funct(Ir,tr,sol.I,sol.t))
+        sol=intger(S0,E0,I0,R0,min(tr),max(tr),h,x[0],x[1],x[2],mov,qp,tr[-1],movfunct)
+        return(objective_funct(Ir,tr,sol['I'],sol['t']))
         
     
-    xopt, fopt = pso(opti, lb, ub, minfunc=1e-8, omega=0.5, phip=0.5, phig=0.5,swarmsize=200,maxiter=100)
-    #print('rel_error '+str(fopt/LA.norm(Ir)))
-    print('error '+str(fopt))
+    xopt, fopt = pso(opti, lb, ub, minfunc=1e-8, omega=0.5, phip=0.5, phig=0.5,swarmsize=150,maxiter=100)
+    print('rel_error ')
+    print(fopt/LA.norm(Ir))
+    print('error ')
+    print(fopt)
     sim=intger(S0,xopt[3]*I0,I0,R0,min(tr),tsim,0.01,xopt[0],xopt[1],xopt[2],mov,qp,tr[-1],movfunct)
     b_date=dt.datetime.strptime(data.labels.loc[0], '%d/%m')
+
     return({'Ir':Ir,'tr':tr, 'params':xopt, 'err':fopt,'sim':sim, 'init_date':b_date})
     # I reales t real, parametros optimos, error, diccionario con resultado simulacion, fecha primer contagiado
 
