@@ -14,6 +14,7 @@ from numpy import linalg as LA
 import multiprocessing
 from joblib import Parallel, delayed
 from scipy import signal
+import io
 
 
 #endpoint = "http://192.168.2.220:8080/covid19/selectComunas"
@@ -44,16 +45,17 @@ def intger(Si,Ei,Ii,Ri,ti,T,h,beta,sigma,gamma,mov,qp=0,tci=None, movfunct = 'sa
                     return(1)
                 else:
                     return(mov)
-    elif tci is None:        
-        def e_fun(t):
-            return((1-mov)/2*(f(np.pi / qp * t - np.pi))+(1+mov)/2)
     else:
-        def e_fun(t):
-                if t<tci:
-                    return(1)
-                else:
-                    return((1-mov)/2*(f(np.pi / qp * t - np.pi))+(1+mov)/2)
-    
+        if tci is None:        
+            def e_fun(t):
+                return((1-mov)/2*(f(np.pi / qp * t - np.pi))+(1+mov)/2)
+        else:
+            def e_fun(t):
+                    if t<tci:
+                        return(1)
+                    else:
+                        return((1-mov)/2*(f(np.pi / qp * t - np.pi))+(1+mov)/2)
+        
     def model_SEIR(t,y,ydot):
         S0 = y[0]
         E0 = y[1]
@@ -202,7 +204,7 @@ def ref_sim_all(state,comuna,mov=0.2,qp=0,tsim = 300,tci=None,movfunct='sawtooth
     b_date=dt.datetime.strptime(data.labels.loc[0], '%d/%m')
 
     tout = range(int(tsim))
-    idx=np.searchsorted(t,tout)    
+    idx=np.searchsorted(tr,tout)    
     sim['S'] = sim['S'][idx]
     sim['E'] = sim['E'][idx]
     sim['I'] = sim['I'][idx]
@@ -223,35 +225,40 @@ def ref_sim_national(mov=0.2,qp=0,tsim = 300,tci=None,movfunct='sawtooth'):
     info=pd.DataFrame(mydict)
     
     # Total number of infected people
-    endpoint="http://192.168.2.220:8080/covid19/getDatosMinSalSummary?state=""&comuna="
-    r = requests.get(endpoint) #, params = {"w":"774508"})
-    mydict = r.json()
-    data=pd.DataFrame(mydict)
-    data=data[data.data != 0]
-    data=data.reset_index()
-    if not data.data.any():
-        return
+    # endpoint="http://192.168.2.220:8080/covid19/getDatosMinSalSummary?state=""&comuna="
+    # r = requests.get(endpoint) #, params = {"w":"774508"})
+    # mydict = r.json()
+    # data=pd.DataFrame(mydict)
+    # data=data[data.data != 0]
+    # data=data.reset_index()
+    # if not data.data.any():
+    #     return
 
-    tr=np.zeros(len(data.data))
-    for i in range(1,len(data.data),1):
-        diff=dt.datetime.strptime(data.labels[i], '%d/%m')-dt.datetime.strptime(data.labels[i-1], '%d/%m')
+    endpoint="https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/output/producto5/TotalesNacionales_T.csv"
+    s=requests.get(endpoint).content
+    data=pd.read_csv(io.StringIO(s.decode('utf-8')))
+
+    tr=np.zeros(len(data.Fecha))
+    for i in range(1,len(data.Fecha),1):
+        diff=dt.datetime.strptime(data.Fecha[i], '%Y-%m-%d')-dt.datetime.strptime(data.Fecha[i-1], '%Y-%m-%d')
         tr[i]=diff.days+tr[i-1]
     
     if(len(tr)==1):
         return
     
-    Cn=np.zeros(data.data.shape[0])
-    Cn[0]=data.data.iloc[0]
-    for i in range(1,len(Cn),1):
-        Cn[i]=data.data[i]-data.data[i-1]
+    # Cn=np.zeros(data.data.shape[0])
+    # Cn[0]=data.data.iloc[0]
+    # for i in range(1,len(Cn),1):
+    #     Cn[i]=data.data[i]-data.data[i-1]
     
-    Ir=np.zeros(data.data.shape[0])
-    Ir[np.where(tr-14<=0)]=data.data.iloc[np.where(tr-14<=0)]
-    for i in np.where(tr-14>0)[0]:
-        ind=np.where(tr-tr[i]+14<0)[0]
-        Ir[i]=data.data[i]-sum(Cn[0:ind[-1]])
+    # Ir=np.zeros(data.data.shape[0])
+    # Ir[np.where(tr-14<=0)]=data.data.iloc[np.where(tr-14<=0)]
+    # for i in np.where(tr-14>0)[0]:
+    #     ind=np.where(tr-tr[i]+14<0)[0]
+    #     Ir[i]=data.data[i]-sum(Cn[0:ind[-1]])
     
-    
+    Ir=data['Casos activos'].to_numpy()
+
     S0 = np.sum(info.numPopulation)
     I0 = Ir[0]
     R0 = 0
@@ -274,8 +281,79 @@ def ref_sim_national(mov=0.2,qp=0,tsim = 300,tci=None,movfunct='sawtooth'):
     print('error ')
     print(fopt)
     sim=intger(S0,xopt[3]*I0,I0,R0,min(tr),tsim,0.01,xopt[0],xopt[1],xopt[2],mov,qp,tr[-1],movfunct)
-    b_date=dt.datetime.strptime(data.labels.loc[0], '%d/%m')
+    b_date=dt.datetime.strptime(data.Fecha.loc[0], 'Y%-%d-%m')
 
     return({'Ir':Ir,'tr':tr, 'params':xopt, 'err':fopt,'sim':sim, 'init_date':b_date})
+    # I reales t real, parametros optimos, error, diccionario con resultado simulacion, fecha primer contagiado
+
+
+def ref_sim_national_mu(mov=0.2,qp=0,tsim = 300,tci=None,movfunct='sawtooth',mu=2):
+    # Region, comuna, movilidad durante cuarentena, periodo cuarenetena, tiempo simulacion, tiempo inicial cuarentena
+ 
+    # Total number of inhabitants
+    endpoint="http://192.168.2.220:8080/covid19/findComunaByIdState?idState=""&&comuna="
+    r = requests.get(endpoint) #, params = {"w":"774508"})
+    mydict = r.json()
+    info=pd.DataFrame(mydict)
+    
+    # Total number of infected people
+    # endpoint="http://192.168.2.220:8080/covid19/getDatosMinSalSummary?state=""&comuna="
+    # r = requests.get(endpoint) #, params = {"w":"774508"})
+    # mydict = r.json()
+    # data=pd.DataFrame(mydict)
+    # data=data[data.data != 0]
+    # data=data.reset_index()
+    # if not data.data.any():
+    #     return
+    endpoint="https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/output/producto5/TotalesNacionales_T.csv"
+    s=requests.get(endpoint).content
+    data=pd.read_csv(io.StringIO(s.decode('utf-8')))
+
+    tr=np.zeros(len(data.Fecha))
+    for i in range(1,len(data.Fecha),1):
+        diff=dt.datetime.strptime(data.Fecha[i], '%Y-%m-%d')-dt.datetime.strptime(data.Fecha[i-1], '%Y-%m-%d')
+        tr[i]=diff.days+tr[i-1]
+    
+    if(len(tr)==1):
+        return
+    
+    # Cn=np.zeros(data.data.shape[0])
+    # Cn[0]=data.data.iloc[0]
+    # for i in range(1,len(Cn),1):
+    #     Cn[i]=data.data[i]-data.data[i-1]
+    
+    # Ir=np.zeros(data.data.shape[0])
+    # Ir[np.where(tr-14<=0)]=data.data.iloc[np.where(tr-14<=0)]
+    # for i in np.where(tr-14>0)[0]:
+    #     ind=np.where(tr-tr[i]+14<0)[0]
+    #     Ir[i]=data.data[i]-sum(Cn[0:ind[-1]])
+    
+    Ir=data['Casos activos'].to_numpy()
+    
+    S0 = np.sum(info.numPopulation)
+    I0 = Ir[0]
+    R0 = 0
+    h=0.01
+    
+    lb=[0.01,0.1,0.05]
+    ub=[3.5,0.3,0.1]
+    #(Si,Ei,Ii,Ri,ti,T,h,beta,sigma,gamma,mov,qp=0,tci=None, movfunct = 'sawtooth')
+    #(Si,Ei,Ii,Ri,ti,T,h,beta,sigma,gamma,mov,qp=0,tci=None, movfunct = 'sawtooth'):
+    def opti(x):
+        E0=0
+        E0=mu*I0
+        sol=intger(S0,E0,I0,R0,min(tr),max(tr),h,x[0],x[1],x[2],mov,qp,tr[-1],movfunct)
+        return(objective_funct(Ir,tr,sol['I'],sol['t']))
+        
+    
+    xopt, fopt = pso(opti, lb, ub, minfunc=1e-8, omega=0.5, phip=0.5, phig=0.5,swarmsize=150,maxiter=75)
+    print('rel_error ')
+    print(fopt/LA.norm(Ir))
+    print('error ')
+    print(fopt)
+    sim=intger(S0,mu*I0,I0,R0,min(tr),tsim,0.01,xopt[0],xopt[1],xopt[2],mov,qp,tr[-1],movfunct)
+    b_date=dt.datetime.strptime(data.Fecha.loc[0], '%Y-%d-%m')
+
+    return({'Ir':Ir,'tr':tr, 'params':xopt, 'err':fopt, 'rerr':fopt/LA.norm(Ir), 'sim':sim, 'init_date':b_date})
     # I reales t real, parametros optimos, error, diccionario con resultado simulacion, fecha primer contagiado
 

@@ -211,6 +211,7 @@ if savetocsv:
 #sim = pd.DataFrame(sim)
 
 qp = 0
+tci = 42
 sim = SDSEIR.intger(Si,Ei,Ii,Ri,ti,tsim,0.01,beta,sigma,gamma,mov,qp=qp,tci=tci, movfunct = 'sawtooth')
 sim.pop('t')
 sim = pd.DataFrame(sim)
@@ -247,3 +248,15 @@ sim.pop('t')
 sim = pd.DataFrame(sim)
 if savetocsv:
     sim.to_csv('Nacional_sim_28D.csv')
+
+
+
+
+
+""" 
+-----------------------------------------------------------------------------------------------------------------------
+Pipeline Nacional oficial
+"""
+
+realdata = pd.read_csv('TotalesNacionales.csv')
+Ireal = realdata.loc[4].to_list()[1:]

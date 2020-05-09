@@ -123,6 +123,12 @@ def refineuni():
         I = results['I'].tolist()
         R = results['R'].tolist()
         t = list(results['t'])
+
+        # Round results:
+        S = [round(i) for i in S]
+        E = [round(i) for i in E]
+        I = [round(i) for i in I]
+        R = [round(i) for i in R]        
         
         Ti = 1/parameters[1]
         Tr = 1/parameters[2]
@@ -201,6 +207,13 @@ def simulateuni():
         R = results['R'].tolist()
         t = list(results['t'])
         init_date = results['init_date']
+
+        # Round results:
+        S = [round(i) for i in S]
+        E = [round(i) for i in E]
+        I = [round(i) for i in I]
+        R = [round(i) for i in R]
+
         response = {'status': 'OK','S':S,'E':E,'I':I,'R':R,'t':t,'init_date':init_date,'I_peak':max(I),'R_total':(max(R))}
         print(response.keys())
         return response, 200
@@ -250,12 +263,14 @@ def SEIR2refine():
         # Get data for different quarantine periods
         # Import data, parameters and initdate
 
-        parameters = pd.read_csv(path+'parameters_qp0.csv',index_col=0)
-        initdate = pd.read_csv(path+'initdate_qp0.csv',index_col=0)
+        #parameters = pd.read_csv(path+'parameters_qp0.csv',index_col=0)
+        #init_date = pd.read_csv(path+'initdate_qp0.csv',index_col=0)
+        parameters = pd.read_csv(path+'parameters.csv',index_col=0)
+        init_date = pd.read_csv(path+'initdate.csv',index_col=0)        
 
         ## Find data for paramters given
         parameters = parameters[comuna]
-        initdate = initdate[comuna][0]
+        init_date = init_date[comuna][0]
         results = SDSEIR.simulate(state,comuna,parameters[0],parameters[1],parameters[2],parameters[3],qp = qp,mov = mov,tsim = tsim, movfunct=movfunct)
         S = results['S'].tolist()
         E = results['E'].tolist()
@@ -266,10 +281,16 @@ def SEIR2refine():
         Ti = 1/parameters[1]
         Tr = 1/parameters[2]
 
+        # Round results:
+        S = [round(i) for i in S]
+        E = [round(i) for i in E]
+        I = [round(i) for i in I]
+        R = [round(i) for i in R]
+
         #print(results)
         print("done simulating")    
 
-        response = {'status': 'OK','S':S,'E':E,'I':I,'R':R,'t':t, 'Ti':Ti,'Tr':Tr,'beta':parameters[0],'r0':parameters[3],'initdate':initdate,'I_peak':max(I),'R_total':(max(R))}
+        response = {'status': 'OK','S':S,'E':E,'I':I,'R':R,'t':t, 'Ti':Ti,'Tr':Tr,'beta':parameters[0],'r0':parameters[3],'init_date':init_date,'I_peak':max(I),'R_total':(max(R))}
         #print(response)
         return jsonify(response), 200
 
@@ -294,7 +315,7 @@ def SEIR2simulate():
         if request.form:
             print("I have form data")
             state = str(request.form.get('state'))
-            comuna = str(request.form.get('comuna'))
+            urbancenter = str(request.form.get('urbancenter'))
             qp = int(request.form.get('qp'))
             beta = float(request.form.get('beta'))
             Ti = int(request.form.get('Ti')) #sigma-1
@@ -307,7 +328,7 @@ def SEIR2simulate():
         if request.json:
             print("I have json")        
             state = str(request.json['state'])
-            comuna = str(request.json['comuna'])
+            urbancenter = str(request.json['urbancenter'])
             qp = int(request.json['qp'])
             beta = float(request.json['beta'])
             Ti = int(request.json['Ti']) #sigma-1
@@ -317,7 +338,8 @@ def SEIR2simulate():
             tsim = int(request.json['tSim'])
             movfunct = str(request.json['movfunct'])
 
-        # Get Comunas from somewhere             
+        # Get Comunas from OD 
+        # falta identificar centros urbanos     
         comunas = []
         if qp ==-1:
             qp = tsim
@@ -335,13 +357,21 @@ def SEIR2simulate():
         #params = beta sigma gamma mu
         params = [beta,sigma,gamma,r0] 
         
-        # {'S':sim.S,'E':sim.E,'I':sim.I,'R':sim.R,'tout':sim.t}
-        results = MDSEIR.simulatemulti(state,comunas,params,qp,mov,tsim,tci,movfunct)
+        # inputs: state, centrourbano, beta, sigma, gamma, mu,qp, mov,tsim, tci, movfunct 
+        # outputs: {'S':sim.S,'E':sim.E,'I':sim.I,'R':sim.R,'tout':sim.t}
+        results = MDSEIR.simulate_multi(state,comunas,params,qp,mov,tsim,tci,movfunct)
         S = results['S'].tolist()
         E = results['E'].tolist()
         I = results['I'].tolist()
         R = results['R'].tolist()
         t = list(results['tout'])
+
+        # Round results:
+        S = [round(i) for i in S]
+        E = [round(i) for i in E]
+        I = [round(i) for i in I]
+        R = [round(i) for i in R]
+                
         init_date = results['init_date']
         response = {'status': 'OK','S':S,'E':E,'I':I,'R':R,'t':t,'init_date':init_date,'I_peak':max(I),'R_total':(max(R))}
         return jsonify(response), 200
