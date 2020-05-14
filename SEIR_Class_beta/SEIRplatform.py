@@ -111,8 +111,10 @@ def refineuni():
         # Get data for different quarantine periods
         # Import data, parameters and initdate
 
-        parameters = pd.read_csv(path+'parameters_qp0.csv',index_col=0)
-        initdate = pd.read_csv(path+'initdate_qp0.csv',index_col=0)
+        #parameters = pd.read_csv(path+'parameters_qp0.csv',index_col=0)
+        #initdate = pd.read_csv(path+'initdate_qp0.csv',index_col=0)
+        parameters = pd.read_csv(path+'parameters.csv',index_col=0)
+        initdate = pd.read_csv(path+'initdate.csv',index_col=0)        
 
         ## Find data for paramters given
         parameters = parameters[comuna]
@@ -134,7 +136,9 @@ def refineuni():
         Tr = 1/parameters[2]
 
         #print(results)
-        print("done simulating")    
+        print("done simulating")
+        print('beta,sigma,gama,mu')
+        print(parameters)
 
         response = {'status': 'OK','S':S,'E':E,'I':I,'R':R,'t':t, 'Ti':Ti,'Tr':Tr,'beta':parameters[0],'r0':parameters[3],'initdate':initdate,'I_peak':max(I),'R_total':(max(R))}
         #print(response)
@@ -184,8 +188,6 @@ def simulateuni():
         #mov = 0.2#request.form.get('aten')
         #tsim = 100
         #tci = request.form.get('tci')
-        if qp ==-1:
-            qp = tsim
 
         #print('Inputs')
         #print(state,comuna,qp,beta,Ti,Tr,r0,mov,tsim,movfunct)
@@ -200,6 +202,8 @@ def simulateuni():
         else:
             gamma = 1/Tr
         #{"S":S,"E":E,"I":I,"R":R,"t":t}
+        print('state,comuna,beta,sigma,gamma,r0,qp,mov,tsim')
+        print(state,comuna,beta,sigma,gamma,r0,qp,mov,tsim)
         results = SDSEIR.simulate(state,comuna,beta,sigma,gamma,r0,qp,mov,tsim,movfunct=movfunct)
         S = results['S'].tolist()
         E = results['E'].tolist()
@@ -213,6 +217,8 @@ def simulateuni():
         E = [round(i) for i in E]
         I = [round(i) for i in I]
         R = [round(i) for i in R]
+        a = pd.DataFrame(results)
+        a.to_csv('lastrequest.csv')
 
         response = {'status': 'OK','S':S,'E':E,'I':I,'R':R,'t':t,'init_date':init_date,'I_peak':max(I),'R_total':(max(R))}
         print(response.keys())
