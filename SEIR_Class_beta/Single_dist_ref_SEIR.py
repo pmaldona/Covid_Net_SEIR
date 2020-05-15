@@ -502,18 +502,18 @@ def ref_sim_cons(state,comuna,mov=0.2,qp=0,tsim = 300,tci=None,movfunct='sawtoot
     #   From accumulated to actives   #
     # ------------------------------- #
 
-    # Sacar los acumulados
+    # New Cases
     Cn=np.zeros(len(data[ncomuna]))
     Cn[0]=data[ncomuna][0]
     for i in range(1,len(Cn)):
         Cn[i]=data[ncomuna][i]-data[ncomuna][i-1]
     
-    # Sacar los recuperados
+    # Total active cases each day
     Ir=np.zeros(data.shape[0])
-    Ir[np.where(tr-14<=0)]=data[ncomuna][np.where(tr-14<=0)]
-    for i in np.where(tr-14>0)[0]:
-        ind=np.where(tr-tr[i]+14<0)[0]
-        Ir[i]=data[i]-sum(Cn[0:ind[-1]])    
+    Ir[np.where(np.array(tr)<=14)[0]]=data[ncomuna][np.where(np.array(tr)<=14)[0]]
+    for i in np.where(np.array(tr)>14)[0]:
+        ind=np.where(np.array(tr)-tr[i]+14<0)[0]
+        Ir[i]=data[ncomuna][i]-sum(Cn[0:ind[-1]])    
 
 
 

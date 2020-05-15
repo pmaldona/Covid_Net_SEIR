@@ -35,7 +35,7 @@ if __name__ == '__main__':
 
     print(tstate)
     # Input parameters:
-    aten = 0.2 # movility level during quarantine 
+    mov = 0.2 # movility level during quarantine 
     qp = 0 # Quarantine Period
     simdata = pd.DataFrame()
     simparameters = pd.DataFrame(index=['beta','sigma','gamma','mu','err'])
@@ -48,7 +48,7 @@ if __name__ == '__main__':
         comuna = str(row[0])
         if tstate==None or tstate == state: 
             print('Refining Comuna '+comuna)
-            result = SDSEIR.ref_sim_all(state,comuna,aten,qp)
+            result = SDSEIR.ref_sim_cons(state,comuna,mov,qp)
             if result:            
                 simdata[comuna] = result['sim']['I'] #Check Initial date
                 pd.DataFrame(result['sim']['I']).to_csv(comuna+'_I.csv')
@@ -56,7 +56,7 @@ if __name__ == '__main__':
                 initdate[comuna] = [(result['init_date'] + datetime.timedelta(days=43830)).strftime("%d-%b-%Y")] #Check Initial date
                 print('error: '+str(result['err']))
     print('Saving csv data')
-    path = '../Data/unirefine/'
+    path = '../Data/DatosConsolidados/'
     if tstate == None:
         simdata.to_csv(path+'uni_sim.csv')
         simparameters.to_csv(path+'uni_parameters.csv')
