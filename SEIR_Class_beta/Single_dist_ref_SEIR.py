@@ -494,9 +494,14 @@ def ref_sim_cons(state,comuna,mov=0.2,qp=0,tsim = 300,tci=None,movfunct='sawtoot
     # ----------------------- #
     #   Cut to Comuna Name    #
     # ----------------------- #
+    # mejorar la busqueda
     datacut = pd.read_excel(path+cutcomuna)
-    ncomuna = datacut.loc[datacut['Código Comuna 2017']==int(comuna),'Nombre Comuna'].tolist()[0]
-    Ir = data[ncomuna].tolist()
+    try:
+        ncomuna = datacut.loc[datacut['Código Comuna 2017']==int(comuna),'Nombre Comuna'].tolist()[0]
+        Ir = data[ncomuna].tolist()
+    except:
+        print('Comuna '+ncomuna+' not found in data')
+        return
 
     # ------------------------------- #
     #   From accumulated to actives   #
