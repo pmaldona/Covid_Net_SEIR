@@ -10,8 +10,8 @@ import csv
 import datetime
 
 
-path = '../Data/unirefine/'
-
+#path = '../Data/unirefine/'
+path = '../Data/DatosConsolidados/'
 # import data list
 # init dataframe
 simdata = pd.read_csv(path+'01_uni_sim.csv',index_col=0)
