@@ -1,5 +1,7 @@
 *.pyc
 *.o
+*.png
+*.zip
 SEIR_Class/__pycache__/class_SEIR.cpython-37.pyc
 
 # Data

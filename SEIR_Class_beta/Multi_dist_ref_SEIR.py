@@ -30,7 +30,7 @@ def refine_multi(state,comunas):
     #    info=pd.DataFrame(mydict)
         
     # Data csv encuenstra Sectra (funcional)
-    path="../Data/"
+    path="../Data/UrbanCenters/"
     OD=pd.read_csv(path+"Movilidad_diaria_comuna.csv",index_col=0)
     P=OD.filter(comunas) 
     P=P.loc[comunas].to_numpy()
