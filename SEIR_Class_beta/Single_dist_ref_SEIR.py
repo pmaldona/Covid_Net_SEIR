@@ -652,7 +652,7 @@ def ref_pygmo(state,comuna,mov=0.2,qp=0,tsim = 300,tci=None,movfunct='sawtooth')
 
     prob = pg.problem(SEIRModel_pygmo(Ir,tr,S0,I0,R0,h,mov,qp,movfunct,bounds))
 
-    algo = pg.algorithm(pg.gwo(gen = 50))
+    algo = pg.algorithm(pg.pso(gen = 50))
     pop = pg.population(prob,50)    
     pop = algo.evolve(pop)        
     print(pop.champion_f)
