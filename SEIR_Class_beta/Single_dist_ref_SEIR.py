@@ -691,7 +691,7 @@ class SEIRModel_pygmo:
         self.bounds = bounds
     def fitness(self,x):        
         self.E0=x[3]*self.I0
-        sol=pd.DataFrame(SDSEIR.intger(self.S0,self.E0,self.I0,self.R0,min(self.tr),max(self.tr),self.h,x[0],x[1],x[2],self.mov,self.qp,self.tr[-1],self.movefunct))
+        sol=pd.DataFrame(intger(self.S0,self.E0,self.I0,self.R0,min(self.tr),max(self.tr),self.h,x[0],x[1],x[2],self.mov,self.qp,self.tr[-1],self.movefunct))
         idx=np.searchsorted(sol.t,self.tr)
         res = LA.norm(self.Ir-sol.I[idx])        
         return([res])
