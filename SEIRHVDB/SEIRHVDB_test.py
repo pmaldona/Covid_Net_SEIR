@@ -14,6 +14,15 @@ import pandas as pd
 from numpy import linalg as LA
 
 
+# --------- #
+#   To Do   #
+# --------- #
+
+# i=3 caga  enm el uso de camas
+# Automatizar generación de gráficos para distintos rangos de fechas
+# Implementar el smooth para todos los datos
+
+
 # ------------- #
 #   Parametros  #
 # ------------- #
@@ -227,27 +236,25 @@ def sim(beta,mu):
 
     """
     Escenarios:
-    Pesimistas
-    1) Cuarentena total 14 movmax = 1 mov_rem = 0.9
-    2) Cuarentena total 14 movmax = 1 mov_rem = 0.7
-    3) Cuarentena total 14 movmax = 1 mov_rem = 0.5
-    4) Cuarentena total 28 movmax = 1 mov_rem = 0.9
-    5) Cuarentena total 28 movmax = 1 mov_rem = 0.7
-    6) Cuarentena total 28 movmax = 1 mov_rem = 0.5
+    Realistas
+    0) Cuarentena total 14 movmax = 0.85 mov_rem = 0.6
+    1) Cuarentena total 14 movmax = 0.85 mov_rem = 0.7
+    2) Cuarentena total 14 movmax = 0.85 mov_rem = 0.8
+    3) Cuarentena total 21 movmax = 0.85 mov_rem = 0.6
+    4) Cuarentena total 21 movmax = 0.85 mov_rem = 0.7
+    5) Cuarentena total 21 movmax = 0.85 mov_rem = 0.8
+    6) Cuarentena total de 60 días, cuarentena hiperdinámica de 14 días movmax = 0.85 mov_rem = 0.7
+    7) Cuarentena total de 60 días, cuarentena hiperdinámica de 21 días movmax = 0.85 mov_rem = 0.7
 
     Optimistas
-    7) Cuarentena total 28 movmax = 0.5 mov_rem = 0.2 + din 14p d200
-    8) Cuarentena total 28 movmax = 0.5 mov_rem = 0.2 + din 28p d200
-    9) Cuarentena total 40 movmax = 0.5 mov_rem = 0.2 + din 14p d200
-    10) Cuarentena total 40 movmax = 0.5 mov_rem = 0.2 + din 28p d200
-
-    Realistas:
-    11) Cuarentena total 28 movmax = 0.75 mov_rem = 0.3 + din 14p d200
-    12) Cuarentena total 28 movmax = 0.75 mov_rem = 0.3 + din 28p d200
-    13) Cuarentena total 40 movmax = 0.75 mov_rem = 0.3 + din 14p d200
-    14) Cuarentena total 40 movmax = 0.75 mov_rem = 0.3 + din 28p d200
-
-
+    8) Cuarentena total 14 movmax = 0.55 mov_rem = 0.2
+    9) Cuarentena total 14 movmax = 0.55 mov_rem = 0.3
+    10) Cuarentena total 14 movmax = 0.55 mov_rem = 0.4
+    11) Cuarentena total 21 movmax = 0.55 mov_rem = 0.2
+    12) Cuarentena total 21 movmax = 0.55 mov_rem = 0.3
+    13) Cuarentena total 21 movmax = 0.55 mov_rem = 0.4
+    14) Cuarentena total de 60 días, cuarentena hiperdinámica de 14 días movmax = 0.55 mov_rem = 0.3
+    15) Cuarentena total de 60 días, cuarentena hiperdinámica de 21 días movmax = 0.55 mov_rem = 0.3
     """
     # tsim,max_mov,rem_mov,qp,tci,dtc)  (movfunct)
     input=np.array([
@@ -363,7 +370,12 @@ tr = range(tsim)
 idx = [np.searchsorted(t[i],tr) for i in range(len(input))] 
 
 
+# CAMAS
+H_crin=[sims[i][0].H_cr for i in range(len(input))] 
+H_in=[sims[i][0].H_in for i in range(len(input))] 
+H_out=[sims[i][0].H_out for i in range(len(input))] 
 
+# Disponibilizar fechas peak
 
 
 # ------------------ #
@@ -530,14 +542,15 @@ plot(title='Camas Requeridas')
 # -------------------------------------- #
 #      Activos simulados vs reales       #
 # -------------------------------------- #
+i = 1
 Pdiag = 0.4
 I_act = [Pdiag*sims[i][0].I_mi + sims[i][0].I_cr + sims[i][0].I_se + sims[i][0].H_in+sims[i][0].H_cr+sims[i][0].H_out+sims[i][0].V for i in range(len(input))] 
 datestxt = data['Fechas'][32:]
 dates = list(range(15,15+len(datestxt)))
 datessim = list(range(15,15+len(datestxt)+14))
 
-Ir_hoy = Ir[32:]
-d15M = len(Ir[32:])
+Ir_hoy = Ir[32:40]
+d15M = len(Ir[32:40])
 I_hoy = I_act[i][idx[i][0:(d15M+14)]] + Ir_hoy[32] - I_act[i][0]
 err = LA.norm(Ir_hoy-I_hoy[0:len(Ir_hoy)])/LA.norm(Ir_hoy)
 

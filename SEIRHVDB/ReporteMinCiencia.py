@@ -8,7 +8,6 @@ author: Samuel Ropert
 
 
 
-
 # -------------------------------------- #
 #      Graficos Reporte MinCiencia       #
 # -------------------------------------- #
@@ -26,22 +25,22 @@ author: Samuel Ropert
 # *Grafico 1
 
 # Realista
-i=0
-plt.plot(t[i],100*B[i]/Iac[i],color='red',linestyle='dotted',linewidth = 3.0)
-i=1
-plt.plot(t[i],100*B[i]/Iac[i],color='red',linestyle='solid',linewidth = 3.0)
-i=2
-plt.plot(t[i],100*B[i]/Iac[i],color='red',linestyle='dotted',linewidth = 3.0)
-i=3
-plt.plot(t[i],100*B[i]/Iac[i],color='blue',linestyle='dotted',linewidth = 3.0)
+#i=0
+#plt.plot(t[i],100*B[i]/Iac[i],color='red',linestyle='dotted',linewidth = 3.0)
+#i=1
+#plt.plot(t[i],100*B[i]/Iac[i],color='red',linestyle='solid',linewidth = 3.0)
+#i=2
+#plt.plot(t[i],100*B[i]/Iac[i],color='red',linestyle='dotted',linewidth = 3.0)
+#i=3
+#plt.plot(t[i],100*B[i]/Iac[i],color='blue',linestyle='dotted',linewidth = 3.0)
 i=4
 plt.plot(t[i],100*B[i]/Iac[i],color='blue',linestyle='solid',linewidth = 3.0)
-i=5
-plt.plot(t[i],100*B[i]/Iac[i],color='blue',linestyle='dotted',linewidth = 3.0)
+#i=5
+#plt.plot(t[i],100*B[i]/Iac[i],color='blue',linestyle='dotted',linewidth = 3.0)
 i=6
-#plt.plot(t[i],100*B[i]/Iac[i],color='lime',linestyle='solid',linewidth = 3.0)
+plt.plot(t[i],100*B[i]/Iac[i],color='lime',linestyle='solid',linewidth = 3.0)
 i=7
-#plt.plot(t[i],100*B[i]/Iac[i],color='black',linestyle='solid',linewidth = 3.0)
+plt.plot(t[i],100*B[i]/Iac[i],color='black',linestyle='solid',linewidth = 3.0)
 
 plt.ylim((0, 15))
 plt.title('Letalidad')
@@ -51,18 +50,18 @@ plt.savefig('/home/samuel/Covid_Net_SEIR/SEIRHVDB/Plots/ReporteMinCiencia25-05/L
 plot(ylabel='Letalidad (%)',xlabel='dias', title = 'Letalidad' )
 
 # Optimista
-i=8
-plt.plot(t[i],100*B[i]/Iac[i],color='red',linestyle='dashed',linewidth = 3.0)
-i=9
-plt.plot(t[i],100*B[i]/Iac[i],color='red',linestyle='solid',linewidth = 3.0)
-i=10
-plt.plot(t[i],100*B[i]/Iac[i],color='red',linestyle='dotted',linewidth = 3.0)
-i=11
-plt.plot(t[i],100*B[i]/Iac[i],color='blue',linestyle='dashed',linewidth = 3.0)
+#i=8
+#plt.plot(t[i],100*B[i]/Iac[i],color='red',linestyle='dashed',linewidth = 3.0)
+#i=9
+#plt.plot(t[i],100*B[i]/Iac[i],color='red',linestyle='solid',linewidth = 3.0)
+#i=10
+#plt.plot(t[i],100*B[i]/Iac[i],color='red',linestyle='dotted',linewidth = 3.0)
+#i=11
+#plt.plot(t[i],100*B[i]/Iac[i],color='blue',linestyle='dashed',linewidth = 3.0)
 i=12
 plt.plot(t[i],100*B[i]/Iac[i],color='blue',linestyle='solid',linewidth = 3.0)
-i=13
-plt.plot(t[i],100*B[i]/Iac[i],color='blue',linestyle='dotted',linewidth = 3.0)
+#i=13
+#plt.plot(t[i],100*B[i]/Iac[i],color='blue',linestyle='dotted',linewidth = 3.0)
 i=14
 plt.plot(t[i],100*B[i]/Iac[i],color='lime',linestyle='solid',linewidth = 3.0)
 i=15
@@ -81,26 +80,26 @@ plot(ylabel='Letalidad (%)', xlabel = 'Días desde el 15 de Mayo', title = 'Leta
 #    Letalidad a 30 dias      #
 # --------------------------- #
 # Grafico 2
-
+# 70 y 30
 time = 30
 endD = [np.searchsorted(t[i],range(time)) for i in range(len(input))]
 
-i=0
-plt.plot(t[i][:endD[i][-1]],100*B[i][:endD[i][-1]]/Iac[i][:endD[i][-1]], color='red',linestyle='dotted',linewidth = 3.0)
-i=1
-plt.plot(t[i][:endD[i][-1]],100*B[i][:endD[i][-1]]/Iac[i][:endD[i][-1]], color='red',linestyle='solid',linewidth = 3.0)
-i=2
-plt.plot(t[i][:endD[i][-1]],100*B[i][:endD[i][-1]]/Iac[i][:endD[i][-1]], color='red',linestyle='dotted',linewidth = 3.0)
-i=3
-plt.plot(t[i][:endD[i][-1]],100*B[i][:endD[i][-1]]/Iac[i][:endD[i][-1]], color='blue',linestyle='dotted',linewidth = 3.0)
+#i=0
+#plt.plot(t[i][:endD[i][-1]],100*B[i][:endD[i][-1]]/Iac[i][:endD[i][-1]], color='red',linestyle='dotted',linewidth = 3.0)
+#i=1
+#plt.plot(t[i][:endD[i][-1]],100*B[i][:endD[i][-1]]/Iac[i][:endD[i][-1]], color='red',linestyle='solid',linewidth = 3.0)
+#i=2
+#plt.plot(t[i][:endD[i][-1]],100*B[i][:endD[i][-1]]/Iac[i][:endD[i][-1]], color='red',linestyle='dotted',linewidth = 3.0)
+#i=3
+#plt.plot(t[i][:endD[i][-1]],100*B[i][:endD[i][-1]]/Iac[i][:endD[i][-1]], color='blue',linestyle='dotted',linewidth = 3.0)
 i=4
 plt.plot(t[i][:endD[i][-1]],100*B[i][:endD[i][-1]]/Iac[i][:endD[i][-1]], color='blue',linestyle='solid',linewidth = 3.0)
-i=5
-plt.plot(t[i][:endD[i][-1]],100*B[i][:endD[i][-1]]/Iac[i][:endD[i][-1]], color='blue',linestyle='dotted',linewidth = 3.0)
+#i=5
+#plt.plot(t[i][:endD[i][-1]],100*B[i][:endD[i][-1]]/Iac[i][:endD[i][-1]], color='blue',linestyle='dotted',linewidth = 3.0)
 i=6
-#plt.plot(t[i][:endD[i][-1]],100*B[i][:endD[i][-1]]/Iac[i][:endD[i][-1]], color='lime',linestyle='solid',linewidth = 3.0)
+plt.plot(t[i][:endD[i][-1]],100*B[i][:endD[i][-1]]/Iac[i][:endD[i][-1]], color='lime',linestyle='solid',linewidth = 3.0)
 i=7
-#plt.plot(t[i][:endD[i][-1]],100*B[i][:endD[i][-1]]/Iac[i][:endD[i][-1]], color='black',linestyle='solid',linewidth = 3.0)
+plt.plot(t[i][:endD[i][-1]],100*B[i][:endD[i][-1]]/Iac[i][:endD[i][-1]], color='black',linestyle='solid',linewidth = 3.0)
 
 plt.ylim((0, 8))
 plt.title('Letalidad')
@@ -109,18 +108,18 @@ plt.ylabel('Letalidad(%)')
 plt.savefig('/home/samuel/Covid_Net_SEIR/SEIRHVDB/Plots/ReporteMinCiencia25-05/Letalidad30DRealista.png', dpi=300)
 plot(ylabel='Letalidad (%)')
 
-i=8
-plt.plot(t[i][:endD[i][-1]],100*B[i][:endD[i][-1]]/Iac[i][:endD[i][-1]], color='red',linestyle='dashed',linewidth = 3.0)
-i=9
-plt.plot(t[i][:endD[i][-1]],100*B[i][:endD[i][-1]]/Iac[i][:endD[i][-1]], color='red',linestyle='solid',linewidth = 3.0)
-i=10
-plt.plot(t[i][:endD[i][-1]],100*B[i][:endD[i][-1]]/Iac[i][:endD[i][-1]], color='red',linestyle='dotted',linewidth = 3.0)
-i=11
-plt.plot(t[i][:endD[i][-1]],100*B[i][:endD[i][-1]]/Iac[i][:endD[i][-1]], color='blue',linestyle='dashed',linewidth = 3.0)
+#i=8
+#plt.plot(t[i][:endD[i][-1]],100*B[i][:endD[i][-1]]/Iac[i][:endD[i][-1]], color='red',linestyle='dashed',linewidth = 3.0)
+#i=9
+#plt.plot(t[i][:endD[i][-1]],100*B[i][:endD[i][-1]]/Iac[i][:endD[i][-1]], color='red',linestyle='solid',linewidth = 3.0)
+#i=10
+#plt.plot(t[i][:endD[i][-1]],100*B[i][:endD[i][-1]]/Iac[i][:endD[i][-1]], color='red',linestyle='dotted',linewidth = 3.0)
+#i=11
+#plt.plot(t[i][:endD[i][-1]],100*B[i][:endD[i][-1]]/Iac[i][:endD[i][-1]], color='blue',linestyle='dashed',linewidth = 3.0)
 i=12
 plt.plot(t[i][:endD[i][-1]],100*B[i][:endD[i][-1]]/Iac[i][:endD[i][-1]], color='blue',linestyle='solid',linewidth = 3.0)
-i=13
-plt.plot(t[i][:endD[i][-1]],100*B[i][:endD[i][-1]]/Iac[i][:endD[i][-1]], color='blue',linestyle='dotted',linewidth = 3.0)
+#i=13
+#plt.plot(t[i][:endD[i][-1]],100*B[i][:endD[i][-1]]/Iac[i][:endD[i][-1]], color='blue',linestyle='dotted',linewidth = 3.0)
 i=14
 plt.plot(t[i][:endD[i][-1]],100*B[i][:endD[i][-1]]/Iac[i][:endD[i][-1]], color='lime',linestyle='solid',linewidth = 3.0)
 i=15
@@ -147,22 +146,22 @@ I_act = [sims[i][0].I_mi + sims[i][0].I_cr + sims[i][0].I_se + sims[i][0].H_in+s
 maxI = max([max(I_act[i]) for i in range(len(input))])
 
 # Realista
-i=0
-plt.plot(t[i], I_act[i]/maxI,color='red',linestyle='dotted',linewidth = 3.0)
-i=1
-plt.plot(t[i], I_act[i]/maxI,color='red',linestyle='solid',linewidth = 3.0)
-i=2
-plt.plot(t[i], I_act[i]/maxI,color='red',linestyle='dotted',linewidth = 3.0)
-i=3
-plt.plot(t[i], I_act[i]/maxI,color='blue',linestyle='dotted',linewidth = 3.0)
+#i=0
+#plt.plot(t[i], I_act[i]/maxI,color='red',linestyle='dotted',linewidth = 3.0)
+#i=1
+#plt.plot(t[i], I_act[i]/maxI,color='red',linestyle='solid',linewidth = 3.0)
+#i=2
+#plt.plot(t[i], I_act[i]/maxI,color='red',linestyle='dotted',linewidth = 3.0)
+#i=3
+#plt.plot(t[i], I_act[i]/maxI,color='blue',linestyle='dotted',linewidth = 3.0)
 i=4
 plt.plot(t[i], I_act[i]/maxI,color='blue',linestyle='solid',linewidth = 3.0)
-i=5
-plt.plot(t[i], I_act[i]/maxI,color='blue',linestyle='dotted',linewidth = 3.0)
+#i=5
+#plt.plot(t[i], I_act[i]/maxI,color='blue',linestyle='dotted',linewidth = 3.0)
 i=6
-#plt.plot(t[i], I_act[i]/maxI,color='lime',linestyle='solid',linewidth = 3.0)
+plt.plot(t[i], I_act[i]/maxI,color='lime',linestyle='solid',linewidth = 3.0)
 i=7
-#plt.plot(t[i], I_act[i]/maxI,color='black',linestyle='solid',linewidth = 3.0)
+plt.plot(t[i], I_act[i]/maxI,color='black',linestyle='solid',linewidth = 3.0)
 
 plt.title('Curva Epidemica')
 plt.xlabel('Dias desde el 15 de Mayo')
@@ -172,18 +171,18 @@ plt.savefig('/home/samuel/Covid_Net_SEIR/SEIRHVDB/Plots/ReporteMinCiencia25-05/C
 plot(ylabel='Infectados Activos')
 
 # Optimista
-i=8
-plt.plot(t[i], I_act[i]/maxI,color='red',linestyle='dashed',linewidth = 3.0)
-i=9
-plt.plot(t[i], I_act[i]/maxI,color='red',linestyle='solid',linewidth = 3.0)
-i=10
-plt.plot(t[i], I_act[i]/maxI,color='red',linestyle='dotted',linewidth = 3.0)
-i=11
-plt.plot(t[i], I_act[i]/maxI,color='blue',linestyle='dashed',linewidth = 3.0)
+#i=8
+#plt.plot(t[i], I_act[i]/maxI,color='red',linestyle='dashed',linewidth = 3.0)
+#i=9
+#plt.plot(t[i], I_act[i]/maxI,color='red',linestyle='solid',linewidth = 3.0)
+#i=10
+#plt.plot(t[i], I_act[i]/maxI,color='red',linestyle='dotted',linewidth = 3.0)
+#i=11
+#plt.plot(t[i], I_act[i]/maxI,color='blue',linestyle='dashed',linewidth = 3.0)
 i=12
 plt.plot(t[i], I_act[i]/maxI,color='blue',linestyle='solid',linewidth = 3.0)
-i=13
-plt.plot(t[i], I_act[i]/maxI,color='blue',linestyle='dotted',linewidth = 3.0)
+#i=13
+#plt.plot(t[i], I_act[i]/maxI,color='blue',linestyle='dotted',linewidth = 3.0)
 i=14
 plt.plot(t[i], I_act[i]/maxI,color='lime',linestyle='solid',linewidth = 3.0)
 i=15
@@ -480,8 +479,6 @@ dates = [str(i) for i in dates]
 days = len(dates)
 idx = [np.searchsorted(t[i],range(days+1)) for i in range(len(input))]
 
-
-
 # --------------------------- #
 #    Letalidad a 30 dias      #
 # --------------------------- #
@@ -533,4 +530,4 @@ Iacdata = pd.DataFrame(Iacdata)
 index = pd.DataFrame(dict(dates=index))
 datosminciencia = pd.concat([index,Iacdata,Bdata,Letalidad], axis=1, sort=False) 
 datosminciencia = datosminciencia.set_index('dates')
-datosminciencia.to_excel('/home/samuel/Covid_Net_SEIR/SEIRHVDB/Plots/ReporteMinCiencia25-05/datos.xls') 
+datosminciencia.to_excel('/home/samuel/Covid_Net_SEIR/SEIRHVDB/Plots/ReporteMinCiencia25-05/datos-02.xls') 

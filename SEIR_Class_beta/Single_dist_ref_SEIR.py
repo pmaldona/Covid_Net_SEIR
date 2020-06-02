@@ -146,10 +146,64 @@ def simulate(state,comuna,beta,sigma,gamma,mu,qp=0,mov=0.2,tsim=300,tci=None,mov
 
 
 def ref_sim_all(state,comuna,mov=0.2,qp=0,tsim = 300,tci=None,movfunct='sawtooth'):
+    # Total number of inhabitants
+    endpoint="http://192.168.2.220:8080/covid19/findComunaByIdState?idState="+state+"&&comuna="+comuna    
+    r = requests.get(endpoint) #, params = {"w":"774508"})
+    mydict = r.json()
+    info=pd.DataFrame(mydict)
+
+    # Active infected
+    endpoint = "http://192.168.2.223:5006/getActiveNewCasesByComuna?comuna="+comuna
+    r = requests.get(endpoint) #, params = {"w":"774508"})
+    mydict = r.json()
+    data=pd.DataFrame(mydict)
+    if not data.actives.any():
+        return
+
+    # Build time vector
+    tr=np.zeros(len(data))
+    for i in range(1,len(data)):
+        diff=dt.datetime.strptime(data.dates[i], '%Y-%m-%d')-dt.datetime.strptime(data.dates[i-1], '%Y-%m-%d')
+        tr[i]=diff.days+tr[i-1]    
+
+    if(len(tr)==1):
+        return    
+
+
+    # Get actives:
+    Ir = list(data.actives)
+    
+    S0 = info[info['cut']==comuna].numPopulation.iloc[0]
+    I0 = Ir[0]
+    R0 = 0
+    h=0.01
+    
+    lb=[0.01,0.1,0.05,1.5]
+    ub=[3.5,0.3,0.1,5.5]
+    
+    def opti(x):
+        E0=0
+        E0=x[3]*I0
+        sol=pd.DataFrame(intger(S0,E0,I0,R0,min(tr),max(tr),h,x[0],x[1],x[2],mov,qp,tr[-1],movfunct))
+        return(objective_funct(Ir,tr,sol.I,sol.t))
+        
+    
+    xopt, fopt = pso(opti, lb, ub, minfunc=1e-8, omega=0.5, phip=0.5, phig=0.5,swarmsize=100,maxiter=50)
+    print('error '+str(fopt))
+    sim=intger(S0,xopt[3]*I0,I0,R0,min(tr),tsim,h,xopt[0],xopt[1],xopt[2],mov,qp,tr[-1],movfunct)
+    b_date=dt.datetime.strptime(data.labels.loc[0], '%d/%m')
+
+    tout = range(int(tsim))
+    sim['t'] = tout
+    return({'Ir':Ir,'tr':tr, 'params':xopt, 'err':fopt,'sim':sim, 'init_date':b_date})
+    # I reales t real, parametros optimos, error, diccionario con resultado simulacion, fecha primer contagiado
+    
+
+def ref_sim_all_old(state,comuna,mov=0.2,qp=0,tsim = 300,tci=None,movfunct='sawtooth'):
     # Region, comuna, movilidad durante cuarentena, periodo cuarenetena, tiempo simulacion, tiempo inicial cuarentena
  
     # Total number of inhabitants
-    endpoint="http://192.168.2.220:8080/covid19/findComunaByIdState?idState="+state+"&&comuna="+comuna
+    endpoint="http://192.168.2.220:8080/covid19/findComunaByIdState?idState="+state+"&&comuna="+comuna    
     r = requests.get(endpoint) #, params = {"w":"774508"})
     mydict = r.json()
     info=pd.DataFrame(mydict)
@@ -164,6 +218,7 @@ def ref_sim_all(state,comuna,mov=0.2,qp=0,tsim = 300,tci=None,movfunct='sawtooth
     if not data.data.any():
         return
 
+    
     tr=np.zeros(len(data.data))
     for i in range(1,len(data.data),1):
         diff=dt.datetime.strptime(data.labels[i], '%d/%m')-dt.datetime.strptime(data.labels[i-1], '%d/%m')
