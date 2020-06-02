@@ -191,7 +191,7 @@ def ref_sim_all(state,comuna,mov=0.2,qp=0,tsim = 300,tci=None,movfunct='sawtooth
     xopt, fopt = pso(opti, lb, ub, minfunc=1e-8, omega=0.5, phip=0.5, phig=0.5,swarmsize=100,maxiter=50)
     print('error '+str(fopt))
     sim=intger(S0,xopt[3]*I0,I0,R0,min(tr),tsim,h,xopt[0],xopt[1],xopt[2],mov,qp,tr[-1],movfunct)
-    b_date=dt.datetime.strptime(data.labels.loc[0], '%d/%m')
+    b_date=dt.datetime.strptime(data.dates.loc[0], '%Y-%m-%d')
 
     tout = range(int(tsim))
     sim['t'] = tout
