@@ -48,7 +48,7 @@ if __name__ == '__main__':
         comuna = str(row[0])
         if tstate==None or tstate == state: 
             print('Refining Comuna '+comuna)
-            result = SDSEIR.ref_sim_cons(state,comuna,mov,qp)
+            result = SDSEIR.ref_pygmo(state,comuna,mov,qp)
             if result:            
                 simdata[comuna] = result['sim']['I'] #Check Initial date
                 pd.DataFrame(result['sim']['I']).to_csv(comuna+'_I.csv')
@@ -69,5 +69,5 @@ if __name__ == '__main__':
     # Falta procesar los datos de salida para tener 1 por dia
 
     
-            # {'Ir':Ir,'tr':tr, 'params':xopt, 'err':fopt,'sim':sim, 'init_date':b_date}
+    # {'Ir':Ir,'tr':tr, 'params':xopt, 'err':fopt,'sim':sim, 'init_date':b_date}
     

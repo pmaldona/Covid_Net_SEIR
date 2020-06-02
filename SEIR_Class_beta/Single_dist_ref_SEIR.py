@@ -15,6 +15,7 @@ import multiprocessing
 from joblib import Parallel, delayed
 from scipy import signal
 import io
+import pygmo as pg
 
 
 #endpoint = "http://192.168.2.220:8080/covid19/selectComunas"
@@ -255,7 +256,8 @@ def ref_sim_all_old(state,comuna,mov=0.2,qp=0,tsim = 300,tci=None,movfunct='sawt
         
     
     xopt, fopt = pso(opti, lb, ub, minfunc=1e-8, omega=0.5, phip=0.5, phig=0.5,swarmsize=100,maxiter=50)
-    #print('rel_error '+str(fopt/LA.norm(Ir)))
+    err_rel = fopt/LA.norm(Ir)
+    print('relative error '+str(err_rel))
     print('error '+str(fopt))
     sim=intger(S0,xopt[3]*I0,I0,R0,min(tr),tsim,h,xopt[0],xopt[1],xopt[2],mov,qp,tr[-1],movfunct)
     b_date=dt.datetime.strptime(data.labels.loc[0], '%d/%m')
@@ -267,7 +269,7 @@ def ref_sim_all_old(state,comuna,mov=0.2,qp=0,tsim = 300,tci=None,movfunct='sawt
     #sim['I'] = sim['I'][idx]
     #sim['R'] = sim['R'][idx]
     sim['t'] = tout
-    return({'Ir':Ir,'tr':tr, 'params':xopt, 'err':fopt,'sim':sim, 'init_date':b_date})
+    return({'Ir':Ir,'tr':tr, 'params':xopt, 'err':fopt,'err_rel': err_rel, 'sim':sim, 'init_date':b_date})
     # I reales t real, parametros optimos, error, diccionario con resultado simulacion, fecha primer contagiado
 
 
@@ -609,3 +611,97 @@ def ref_sim_cons(state,comuna,mov=0.2,qp=0,tsim = 300,tci=None,movfunct='sawtoot
     return({'Ir':Ir,'tr':tr, 'params':xopt, 'err':fopt,'sim':sim, 'init_date':b_date})
     # I reales t real, parametros optimos, error, diccionario con resultado simulacion, fecha primer contagiado
 
+
+
+def ref_pygmo(state,comuna,mov=0.2,qp=0,tsim = 300,tci=None,movfunct='sawtooth'):
+    # Total number of inhabitants
+    endpoint="http://192.168.2.220:8080/covid19/findComunaByIdState?idState="+state+"&&comuna="+comuna    
+    r = requests.get(endpoint) #, params = {"w":"774508"})
+    mydict = r.json()
+    info=pd.DataFrame(mydict)
+
+    # Active infected
+    endpoint = "http://192.168.2.223:5006/getActiveNewCasesByComuna?comuna="+comuna
+    r = requests.get(endpoint) #, params = {"w":"774508"})
+    mydict = r.json()
+    data=pd.DataFrame(mydict)
+    if not data.actives.any():
+        return
+
+    # Build time vector
+    tr=np.zeros(len(data))
+    for i in range(1,len(data)):
+        diff=dt.datetime.strptime(data.dates[i], '%Y-%m-%d')-dt.datetime.strptime(data.dates[i-1], '%Y-%m-%d')
+        tr[i]=diff.days+tr[i-1]    
+
+    if(len(tr)==1):
+        return    
+
+
+    # Get actives:
+    Ir = list(data.actives)
+    
+    S0 = info[info['cut']==comuna].numPopulation.iloc[0]
+    I0 = Ir[0]
+    R0 = 0
+    h=0.01
+    
+    lb=[0.01,0.1,0.05,1.5]
+    ub=[3.5,0.3,0.1,5.5]
+    bounds = (lb,ub)
+
+    prob = pg.problem(SEIRModel_pygmo(Ir,tr,S0,I0,R0,h,mov,qp,movfunct,bounds))
+
+    algo = pg.algorithm(pg.gwo(gen = 50))
+    pop = pg.population(prob,50)    
+    pop = algo.evolve(pop)        
+    print(pop.champion_f)
+    print(pop.champion_x)     
+    xopt = pop.champion_x
+    fopt = pop.champion_f
+
+    print('error '+str(fopt))
+    err_rel = fopt/LA.norm(Ir)
+    print('relative error '+str(err_rel))
+    sim=intger(S0,xopt[3]*I0,I0,R0,min(tr),tsim,h,xopt[0],xopt[1],xopt[2],mov,qp,tr[-1],movfunct)
+    b_date=dt.datetime.strptime(data.dates.loc[0], '%Y-%m-%d')
+
+    tout = range(int(tsim))
+    sim['t'] = tout
+    return({'Ir':Ir,'tr':tr, 'params':xopt, 'err':fopt,'err_rel':err_rel,'sim':sim, 'init_date':b_date})
+    # I reales t real, parametros optimos, error, diccionario con resultado simulacion, fecha primer contagiado
+
+
+
+
+
+
+
+class SEIRModel_pygmo:
+    def __init__(self,Ir,tr,S0,I0,R0,h,mov,qp,movefunct,bounds):
+        self.Ir = Ir
+        self.tr = tr
+        self.S0 = S0
+        self.I0 = I0
+        self.R0 = R0
+        self.h = h
+        self.mov = mov
+        self.qp = qp
+        self.movefunct = movefunct
+        self.bounds = bounds
+    def fitness(self,x):        
+        self.E0=x[3]*self.I0
+        sol=pd.DataFrame(SDSEIR.intger(self.S0,self.E0,self.I0,self.R0,min(self.tr),max(self.tr),self.h,x[0],x[1],x[2],self.mov,self.qp,self.tr[-1],self.movefunct))
+        idx=np.searchsorted(sol.t,self.tr)
+        res = LA.norm(self.Ir-sol.I[idx])        
+        return([res])
+
+    def get_bounds(self):
+        return(self.bounds)
+
+    def set_bounds(self,bounds):
+        self.bounds = bounds
+        return(self.bounds)
+
+    def get_name(self):
+        return "SEIR Unsectorial"

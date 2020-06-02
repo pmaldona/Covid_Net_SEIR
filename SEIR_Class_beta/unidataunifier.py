@@ -30,3 +30,4 @@ simdata.to_csv(path+'sim.csv')
 parameters.to_csv(path+'parameters.csv')
 initdate.to_csv(path+'initdate.csv')
 
+#pd.read_csv("/media/samuel/Data/samue/Dropbox/DLab/Data/Unicomunal/parameters.csv", index_col=0)
