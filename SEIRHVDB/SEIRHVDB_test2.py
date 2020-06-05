@@ -9,52 +9,58 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 from numpy import linalg as LA
+import json
+import requests
+from datetime import datetime
 
 
 #------------------------------------------------- #
 #               Define Scenarios                   #
 #------------------------------------------------- #
+tsim = 500
 inputarray=np.array([
-        [500,0.85,0.6,14,14,500,0],
-        [500,0.85,0.7,14,14,500,0],
-        [500,0.85,0.8,14,14,500,0],
-        [500,0.85,0.6,14,21,500,0],
-        [500,0.85,0.7,14,21,500,0],
-        [500,0.85,0.8,14,21,500,0],
-        [500,0.85,0.7,14,60,500,1],
-        [500,0.85,0.7,21,60,500,1],
-        [500,0.55,0.2,14,14,500,0],
-        [500,0.55,0.3,14,14,500,0],
-        [500,0.55,0.4,14,14,500,0],
-        [500,0.55,0.2,14,21,500,0],
-        [500,0.55,0.3,14,21,500,0],
-        [500,0.55,0.4,14,21,500,0],        
-        [500,0.55,0.3,14,60,500,1],
-        [500,0.55,0.3,21,60,500,1]])  
+        [tsim,0.85,0.6,14,14,500,0],
+        [tsim,0.85,0.7,14,14,500,0],
+        [tsim,0.85,0.8,14,14,500,0],
+        [tsim,0.85,0.6,14,21,500,0],
+        [tsim,0.85,0.7,14,21,500,0],
+        [tsim,0.85,0.8,14,21,500,0],
+        [tsim,0.85,0.7,14,60,500,1],
+        [tsim,0.85,0.7,21,60,500,1],
+        [tsim,0.55,0.2,14,14,500,0],
+        [tsim,0.55,0.3,14,14,500,0],
+        [tsim,0.55,0.4,14,14,500,0],
+        [tsim,0.55,0.2,14,21,500,0],
+        [tsim,0.55,0.3,14,21,500,0],
+        [tsim,0.55,0.4,14,21,500,0],        
+        [tsim,0.55,0.3,14,60,500,1],
+        [tsim,0.55,0.3,21,60,500,1]])  
 
-    """
-    Escenarios:
-    Realistas
-    0) Cuarentena total 14 movmax = 0.85 mov_rem = 0.6
-    1) Cuarentena total 14 movmax = 0.85 mov_rem = 0.7
-    2) Cuarentena total 14 movmax = 0.85 mov_rem = 0.8
-    3) Cuarentena total 21 movmax = 0.85 mov_rem = 0.6
-    4) Cuarentena total 21 movmax = 0.85 mov_rem = 0.7
-    5) Cuarentena total 21 movmax = 0.85 mov_rem = 0.8
-    6) Cuarentena total de 60 días, cuarentena hiperdinámica de 14 días movmax = 0.85 mov_rem = 0.7
-    7) Cuarentena total de 60 días, cuarentena hiperdinámica de 21 días movmax = 0.85 mov_rem = 0.7
+ns = len(inputarray)
 
-    Optimistas
-    8) Cuarentena total 14 movmax = 0.55 mov_rem = 0.2
-    9) Cuarentena total 14 movmax = 0.55 mov_rem = 0.3
-    10) Cuarentena total 14 movmax = 0.55 mov_rem = 0.4
-    11) Cuarentena total 21 movmax = 0.55 mov_rem = 0.2
-    12) Cuarentena total 21 movmax = 0.55 mov_rem = 0.3
-    13) Cuarentena total 21 movmax = 0.55 mov_rem = 0.4
-    14) Cuarentena total de 60 días, cuarentena hiperdinámica de 14 días movmax = 0.55 mov_rem = 0.3
-    15) Cuarentena total de 60 días, cuarentena hiperdinámica de 21 días movmax = 0.55 mov_rem = 0.3
-    
-    """
+"""
+Escenarios:
+Realistas
+0) Cuarentena total 14 movmax = 0.85 mov_rem = 0.6
+1) Cuarentena total 14 movmax = 0.85 mov_rem = 0.7
+2) Cuarentena total 14 movmax = 0.85 mov_rem = 0.8
+3) Cuarentena total 21 movmax = 0.85 mov_rem = 0.6
+4) Cuarentena total 21 movmax = 0.85 mov_rem = 0.7
+5) Cuarentena total 21 movmax = 0.85 mov_rem = 0.8
+6) Cuarentena total de 60 días, cuarentena hiperdinámica de 14 días movmax = 0.85 mov_rem = 0.7
+7) Cuarentena total de 60 días, cuarentena hiperdinámica de 21 días movmax = 0.85 mov_rem = 0.7
+
+Optimistas
+8) Cuarentena total 14 movmax = 0.55 mov_rem = 0.2
+9) Cuarentena total 14 movmax = 0.55 mov_rem = 0.3
+10) Cuarentena total 14 movmax = 0.55 mov_rem = 0.4
+11) Cuarentena total 21 movmax = 0.55 mov_rem = 0.2
+12) Cuarentena total 21 movmax = 0.55 mov_rem = 0.3
+13) Cuarentena total 21 movmax = 0.55 mov_rem = 0.4
+14) Cuarentena total de 60 días, cuarentena hiperdinámica de 14 días movmax = 0.55 mov_rem = 0.3
+15) Cuarentena total de 60 días, cuarentena hiperdinámica de 21 días movmax = 0.55 mov_rem = 0.3
+
+"""
 
 
 
@@ -63,29 +69,9 @@ inputarray=np.array([
 # -------------- #
 beta = 0.19
 mu = 2.6
-sims = SD2.simSEIRHVD(beta = beta, mu = mu, inputarray= inputarray)
-sims = SEIRHVD.simulate(beta,mu)
+model = SD2.simSEIRHVD(beta = beta, mu = mu, inputarray= inputarray)
+sims = model.simulate()
 
-
-
-#------------------------------------------------- #
-#               Estudio Resultados                 #
-#------------------------------------------------- #
-
-# -------------------------- #
-#        Importar Data       #
-# -------------------------- #
-# 15 de Mayo igual dato 32
-data = pd.read_excel('/home/samuel/Downloads/Data_SEIRHUVD.xlsx') 
-Ir = data['Infectados Activos (extrapolados)'] 
-Irac = data['Infectados Acumulados'] 
-Br = data['Fallecidos']
-Hr_bed = data['Camas Ocupadas']
-Hr_vent = data['VMI Ocupados']
-
-
-#Iac15M = 39542 # infectados acumulados a la fecha 15 de mayo 39542  -  
-Iac15M = 29276
 
 
 
@@ -146,7 +132,86 @@ H_crin=[sims[i][0].H_cr for i in range(len(inputarray))]
 H_in=[sims[i][0].H_in for i in range(len(inputarray))] 
 H_out=[sims[i][0].H_out for i in range(len(inputarray))] 
 
-# Disponibilizar fechas peak
+
+
+
+# ------------------------------- #
+#        Importar Data Real       #
+# ------------------------------- #
+# 15 de Mayo igual dato 32
+data = pd.read_excel('/home/samuel/Downloads/Data_SEIRHUVD.xlsx') 
+Ir = data['Infectados Activos (extrapolados)'] 
+Irac = data['Infectados Acumulados'] 
+Br = data['Fallecidos']
+Hr_bed = data['Camas Ocupadas']
+Hr_vent = data['VMI Ocupados']
+
+# Import cutlist
+cutlist = []
+cutlistpath = "../Data/cutlist.csv"
+cutlist = pd.read_csv(cutlistpath, header = None,dtype=str)
+
+# Infectados Activos
+tstate = '13' #RM
+actives = []
+for index, row in cutlist.iterrows():    
+    state = str(row[0])[0:2]
+    comuna = str(row[0])
+    if tstate == state:
+        endpoint = "http://192.168.2.223:5006/getActiveNewCasesByComuna?comuna="+comuna
+        r = requests.get(endpoint) 
+        mydict = r.json()
+        actives.append(mydict['actives'])
+        #data=pd.DataFrame(mydict)
+actives = (np.array(actives)).sum(axis=0)
+
+# Build time vector
+tr=np.zeros(len(actives))
+for i in range(1,len(data)):
+    diff=datetime.strptime(data.dates[i], '%Y-%m-%d')-datetime.strptime(data.dates[i-1], '%Y-%m-%d')
+    tr[i]=diff.days+tr[i-1]    
+
+
+# Datos Sochimi
+endpoint = "http://192.168.2.223:5006/getDatosSochimi"
+r = requests.get(endpoint) 
+mydict = r.json()
+sochimi=pd.DataFrame(mydict)
+
+sochimirm = sochimi.loc[sochimi['region_id'] == 13]
+
+df.loc[df['column_name'] == some_value]
+
+
+#Iac15M = 39542 # infectados acumulados a la fecha 15 de mayo 39542  -  
+Iac15M = 29276
+
+
+
+  
+
+
+# Get actives:
+Ir = list(data.actives)
+
+S0 = info[info['cut']==comuna].numPopulation.iloc[0]
+
+
+
+#------------------------------------------------- #
+#               Estudio Resultados                 #
+#------------------------------------------------- #
+
+# -------------------------------- #
+#        Graficar resultados       #
+# -------------------------------- #
+def plot(title='',xlabel='',ylabel=''):
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.title(title)
+    plt.legend(loc=0)
+    plt.show()
+
 
 
 # ------------------ #
@@ -176,6 +241,7 @@ plot(title='Infectados Simulados')
 # ----------------------- #
 #      Saturacion         #
 # ----------------------- #
+i = 3
 H_crin=[sims[i][0].H_cr for i in range(len(inputarray))] 
 H_in=[sims[i][0].H_in for i in range(len(inputarray))] 
 H_out=[sims[i][0].H_out for i in range(len(inputarray))] 
@@ -183,13 +249,13 @@ H_in_hoy = H_in[i][idx[i][0:d15M]]
 H_out_hoy = H_out[i][idx[i][0:d15M]] 
 H_crin_hoy = H_crin[i][idx[i][0:d15M]]
 
-datestxt = data['Fechas'][32:]
-dates = list(range(15,15+len(datestxt)))
+#datestxt = data['Fechas'][32:]
+#dates = list(range(15,15+len(datestxt)))
 Br_hoy = Br[32:]
 d15M = len(Ir[32:])
-H_sat_hoy = [H_sat(H_in_hoy[i],H_out_hoy[i],H_crin_hoy[i],idx[0][i])for i in range(d15M)] #+ Ir_hoy[32] - I[0]
+H_sat_hoy = [sims[i][0].h_sat(H_in_hoy[i],H_out_hoy[i],H_crin_hoy[i],idx[0][i])for i in range(d15M)] #+ Ir_hoy[32] - I[0]
 
-plt.plot(dates,H_sat_hoy,label='Saturacion')
+plt.plot(range(d15M),H_sat_hoy,label='Saturacion')
 plot(title='Saturacion')
 
 

@@ -150,6 +150,86 @@ def refineuni():
         return response, 200
 
 
+@app.route('/refineuni_test', methods=['POST'])
+def refineuni_test():
+    '''
+    # ----------------------------------------------------------- #
+    #     Parameters input when the simulate button is pressed    #
+    # ----------------------------------------------------------- #
+    '''
+    print("Refine")
+    try: 
+        # Manage input parameters
+        if request.form:
+            print("I have form data")
+            state = request.form.get('state') #State (Region)
+            comuna = request.form.get('comuna') # District 
+            qp = int(request.form.get('qp')) # Quarantine period
+            mov = float(request.form.get('mov')) # Quarantine movilty
+            tsim = int(request.form.get('tSim')) # Simulation time
+            movfunct = str(request.form.get('movfunct'))    
+
+        if request.json:
+            print("I have json")        
+            state = request.json['state']
+            comuna = request.json['comuna']
+            qp = int(request.json['qp'])
+            mov = float(request.json['mov']) # Quarantine movilty
+            tsim = int(request.json['tSim'])
+            movfunct = str(request.json['movfunct'])
+        
+        #tsim = 100
+        #mov = 0.2          
+        if qp == -1:
+            qp = tsim
+             
+        # ---------------------------- #
+        #        Get Refine Data       #
+        # ---------------------------- #
+        path = '../Data/unirefine/'
+        
+        # Get data for different quarantine periods
+        # Import data, parameters and initdate
+
+        #parameters = pd.read_csv(path+'parameters_qp0.csv',index_col=0)
+        #initdate = pd.read_csv(path+'initdate_qp0.csv',index_col=0)
+        parameters = pd.read_csv(path+'parameters.csv',index_col=0)
+        initdate = pd.read_csv(path+'initdate.csv',index_col=0)        
+
+        ## Find data for paramters given
+        parameters = parameters[comuna]
+        initdate = initdate[comuna][0]
+        results = SDSEIR.simulate(state,comuna,parameters[0],parameters[1],parameters[2],parameters[3],qp = qp,mov = mov,tsim = tsim, movfunct=movfunct)
+        S = results['S'].tolist()
+        E = results['E'].tolist()
+        I = results['I'].tolist()
+        R = results['R'].tolist()
+        t = list(results['t'])
+
+        # Round results:
+        S = [round(i) for i in S]
+        E = [round(i) for i in E]
+        I = [round(i) for i in I]
+        R = [round(i) for i in R]        
+        
+        Ti = 1/parameters[1]
+        Tr = 1/parameters[2]
+
+        #print(results)
+        print("done simulating")
+        print('beta,sigma,gama,mu')
+        print(parameters)
+
+        response = {'status': 'OK','S':S,'E':E,'I':I,'R':R,'t':t, 'Ti':Ti,'Tr':Tr,'beta':parameters[0],'r0':parameters[3],'initdate':initdate,'I_peak':max(I),'R_total':(max(R))}
+        #print(response)
+        return jsonify(response), 200
+
+    except Exception as e: 
+        print(e)
+        response = {"error": str(e)}
+        return response, 200
+
+
 @app.route('/simulateuni', methods=['POST'])
 def simulateuni():
     '''

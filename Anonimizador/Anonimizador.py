@@ -9,6 +9,10 @@ import pandas as pd
 import hashlib
 import argparse
 import tkinter as tk  
+from tkinter import *
+from tkinter import ttk
+from tkinter import filedialog
+ 
 
 # ------------------------- #
 #     Anonimizador Data     #
@@ -45,6 +49,9 @@ if __name__ == "__main__":
     window = tk.Tk() 
     window.title("Anonimizador Rut - COVID19")
     greeting = tk.Label(text="Hello, Tkinter")
+    greeting.pack()
+
+    window.mainloop()
 
      
     print("Anonimizador")
@@ -89,4 +96,31 @@ if __name__ == "__main__":
     data.to_excel('anonimizado_'+path)
 
 
-    
+
+ 
+ 
+class Root(Tk):
+    def __init__(self):
+        super(Root, self).__init__()
+        self.title("Anonimizador de Ruts")
+        self.minsize(640, 400)
+        #self.wm_iconbitmap('icon.ico')
+ 
+        self.labelFrame = ttk.LabelFrame(self, text = "Abrir archivo")
+        self.labelFrame.grid(column = 0, row = 1, padx = 20, pady = 20)
+ 
+        self.button()
+ 
+ 
+ 
+    def button(self):
+        self.button = ttk.Button(self.labelFrame, text = "Browse A File",command = self.fileDialog)
+        self.button.grid(column = 1, row = 1)
+ 
+ 
+    def fileDialog(self):
+ 
+        self.filename = filedialog.askopenfilename(initialdir =  "/", title = "Select A File", filetype =(("csv files","*.csv"),("all files","*.*")) )
+        self.label = ttk.Label(self.labelFrame, text = "")
+        self.label.grid(column = 1, row = 2)
+        self.label.configure(text = self.filename)

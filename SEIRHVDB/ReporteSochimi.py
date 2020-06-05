@@ -48,8 +48,6 @@ H_crin_hoy = H_crin[i][idx[i][0:days]]
 H_vent_hoy = H_vent[i][idx[i][0:days]] 
 
 
-
-
 i=0
 plt.plot(t[i][idx[i]],CH[i][idx[i]],color='red',linestyle='dotted',linewidth = 3.0)
 plt.plot(t[i][idx[i]],CV[i][idx[i]],color='blue',linestyle='dotted',linewidth = 3.0)
@@ -106,13 +104,13 @@ H_vent_hoy = [H_vent[i][idx[i][0:days]] for i in range(len(input))]
 
 # 14 dias de cuarentena inicial
 i=0
-plt.plot(datessim,H_bed_hoy[i],color='red',linestyle='dotted',linewidth = 3.0)
-plt.plot(datessim,H_vent_hoy[i],color='blue',linestyle='dotted',linewidth = 3.0)
+plt.plot(t[i][:idx[i][-1]],H_bed[i][:idx[i][-1]],color='red',linestyle='dotted',linewidth = 3.0)
+plt.plot(t[i][:idx[i][-1]],H_vent[i][:idx[i][-1]],color='blue',linestyle='dotted',linewidth = 3.0)
 i=1
-plt.plot(datessim,H_bed_hoy[i],color='red',linestyle='solid',linewidth = 3.0)
+plt.plot(t[i][:idx[i][-1]],H_bed[i][:idx[i][-1]],color='red',linestyle='solid',linewidth = 3.0)
 plt.plot(datessim,H_vent_hoy[i],color='blue',linestyle='solid',linewidth = 3.0)
 i=2
-plt.plot(datessim,H_bed_hoy[i],color='red',linestyle='dotted',linewidth = 3.0)
+plt.plot(t[i][:idx[i][-1]],H_bed[i][:idx[i][-1]],color='red',linestyle='dotted',linewidth = 3.0)
 plt.plot(datessim,H_vent_hoy[i],color='blue',linestyle='dotted',linewidth = 3.0)
 
 #plt.ylim((600, 2800))
@@ -121,16 +119,17 @@ plot(title = 'Uso de camas 14D',ylabel='Camas',xlabel = 'Días desde el 15 de Ma
 
 # 21 dias de cuarentena inicial
 #i=3
-#plt.plot(datessim,H_bed_hoy[i],color='red',linestyle='dotted',linewidth = 3.0)
-#plt.plot(datessim,H_vent_hoy[i],label='VMI',color='blue',linestyle='dotted',linewidth = 3.0)
+#plt.plot(t[i][:idx[i][-1]],H_bed[i][:idx[i][-1]],color='red',linestyle='dotted',linewidth = 3.0)
+#plt.plot(t[i][:idx[i][-1]],H_vent[i][:idx[i][-1]],color='blue',linestyle='dotted',linewidth = 3.0)
 i=4
-plt.plot(datessim,H_bed_hoy[i],color='red',linestyle='solid',linewidth = 3.0)
-plt.plot(datessim,H_vent_hoy[i],label='VMI',color='blue',linestyle='solid',linewidth = 3.0)
+plt.plot(t[i][:idx[i][-1]],H_bed[i][:idx[i][-1]],color='red',linestyle='solid',linewidth = 3.0)
+plt.plot(t[i][:idx[i][-1]],H_vent[i][:idx[i][-1]],color='blue',linestyle='solid',linewidth = 3.0)
 i=5
-plt.plot(datessim,H_bed_hoy[i],color='red',linestyle='dotted',linewidth = 3.0)
-plt.plot(datessim,H_vent_hoy[i],color='blue',linestyle='dotted',linewidth = 3.0)
+plt.plot(t[i][:idx[i][-1]],H_bed[i][:idx[i][-1]],color='red',linestyle='dotted',linewidth = 3.0)
+plt.plot(t[i][:idx[i][-1]],H_vent[i][:idx[i][-1]],color='blue',linestyle='dotted',linewidth = 3.0)
 
 #plt.ylim((600, 2800))
+plt.xlim(0,45)
 plt.savefig('/home/samuel/Covid_Net_SEIR/SEIRHVDB/Plots/ReporteSochimi25-05/UsoCamas21D.png', dpi=300)
 plot(title = 'Uso de camas 21D',ylabel='Camas',xlabel = 'Días desde el 15 de Mayo')
 
@@ -158,22 +157,27 @@ CV = [sims[i][0].CV for i in range(len(input))]
 CH_hoy = [CH[i][idx[i][0:days]] for i in range(len(input))]
 CV_hoy = [CV[i][idx[i][0:days]] for i in range(len(input))]
 
-totalbed = [CH_hoy[i] + H_bed_hoy[i] for i in range(len(input))]
-totalvmi= [CV_hoy[i] + H_vent_hoy[i] for i in range(len(input))]
+totalbed = [CH_hoy[i] + CH[i] for i in range(len(input))]
+totalvmi= [CV_hoy[i] + CV[i] for i in range(len(input))]
+
+totalbed = [H_bed[i] + CH[i] for i in range(len(input))]
+totalvmi= [H_vent[i] + CV[i] for i in range(len(input))]
+
 
 
 # 21 dias de cuarentena inicial
 i=3
-plt.plot(datessim,totalbed[i],color='red',linestyle='dotted',linewidth = 3.0)
-plt.plot(datessim,totalvmi[i],color='blue',linestyle='dotted',linewidth = 3.0)
+plt.plot(t[i][:idx[i][-1]],totalbed[i][:idx[i][-1]],color='red',linestyle='dotted',linewidth = 3.0)
+plt.plot(t[i][:idx[i][-1]],totalvmi[i][:idx[i][-1]],color='blue',linestyle='dotted',linewidth = 3.0)
 i=4
-plt.plot(datessim,totalbed[i],color='red',linestyle='solid',linewidth = 3.0)
-plt.plot(datessim,totalvmi[i],color='blue',linestyle='solid',linewidth = 3.0)
+plt.plot(t[i][:idx[i][-1]],totalbed[i][:idx[i][-1]],color='red',linestyle='solid',linewidth = 3.0)
+plt.plot(t[i][:idx[i][-1]],totalvmi[i][:idx[i][-1]],color='blue',linestyle='solid',linewidth = 3.0)
 i=5
-plt.plot(datessim,totalbed[i],color='red',linestyle='dotted',linewidth = 3.0)
-plt.plot(datessim,totalvmi[i],color='blue',linestyle='dotted',linewidth = 3.0)
+plt.plot(t[i][:idx[i][-1]],totalbed[i][:idx[i][-1]],color='red',linestyle='dotted',linewidth = 3.0)
+plt.plot(t[i][:idx[i][-1]],totalvmi[i][:idx[i][-1]],color='blue',linestyle='dotted',linewidth = 3.0)
 
 #plt.ylim((0, 6000))
+plt.xlim(0,45)
 plt.savefig('/home/samuel/Covid_Net_SEIR/SEIRHVDB/Plots/ReporteSochimi25-05/NecTotalCamas21D.png', dpi=300)
 plot(title = 'Necesidad total de camas 21D',ylabel='Camas',xlabel = 'Días desde el 15 de Mayo')
 
@@ -225,16 +229,20 @@ H_crin_hoy = [H_crin[i][idx[i][0:days]] for i in range(len(input))]
 H_vent_hoy = [H_vent[i][idx[i][0:days]] for i in range(len(input))] 
 
 i = 4
+i=4
+plt.plot(t[i][:idx[i][-1]],H_bed[i][:idx[i][-1]],color='red',linestyle='solid',linewidth = 3.0)
+plt.plot(t[i][:idx[i][-1]],H_vent[i][:idx[i][-1]],color='blue',linestyle='solid',linewidth = 3.0)
+
 err_bed = LA.norm(Hr_bed_hoy-H_bed_hoy[i][0:len(Hr_bed_hoy)])/LA.norm(Hr_bed_hoy)
 err_vent = LA.norm(Hr_vent_hoy-H_vent_hoy[i][0:len(Hr_vent_hoy)])/LA.norm(Hr_vent_hoy)
 plt.plot([], [], ' ', label='err_camas: '+str(round(100*err_bed,2))+'%')
 plt.plot([], [], ' ', label='err_VMI: '+str(round(100*err_vent,2))+'%')
-plt.plot(datessim,H_bed_hoy[i],label='sim Inter/Inte',color='red')
-plt.plot(datessim,H_vent_hoy[i],label='sim VMI',color='blue')
+#plt.plot(datessim,H_bed_hoy[i],label='sim Inter/Inte',color='red')
+#plt.plot(datessim,H_vent_hoy[i],label='sim VMI',color='blue')
 plt.scatter(dates,Hr_bed_hoy,label='real Inter/Inten',color='red')
 plt.scatter(dates,Hr_vent_hoy,label='real VMI',color='blue')
 
-
+plt.xlim(0,45)
 plt.savefig('/home/samuel/Covid_Net_SEIR/SEIRHVDB/Plots/ReporteSochimi25-05/CamasRealvsSim.png', dpi=300)
 plot(ylabel='Camas',xlabel='Dias desde el 15 de Mayo')
 
@@ -264,14 +272,12 @@ dates = list(range(15,32))
 dates.extend(list(range(1,31)))
 dates = [str(i) for i in dates]
 days = len(dates)
-idx = [np.searchsorted(t[i],range(days+1)) for i in range(len(input))]
+idx = [np.searchsorted(t[i],range(days+1)) for i in range(len(inputarray))]
 
 
 # ------------------ #
 #    Uso de Camas    #
 # ------------------ #
-
-
 
 #H_bed_hoy = [H_bed[i][idx[i][0:days]] for i in range(len(input))]
 UsoCamas = dict()

@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
@@ -29,7 +28,7 @@ Instructions:
         - qp:
         - iqt:
         - fqt:
-        - movfunct:
+        - movfunct: 
 
 """
 
@@ -50,19 +49,45 @@ class simSEIRHVD:
             [500,0.55,0.3,14,21,500,0],
             [500,0.55,0.4,14,21,500,0],        
             [500,0.55,0.3,14,60,500,1],
-            [500,0.55,0.3,21,60,500,1]])    
-    def __init__(self,beta = 0.19, mu =2.6 , inputarray = definputarray):
+            [500,0.55,0.3,21,60,500,1]])
+
+
+    def __init__(self,beta = 0.19, mu =2.6 , inputarray = definputarray,B=221,D=26,V=758,I_act0=12642,cId0=2234,R=0,Hc0=1980,H_incr=34,H_incr2=0,Vc0=1029,V_incr=17,V_incr2=0,H_cr=80,H0=1720):
         self.mu = mu
         self.beta = beta 
         self.sims = []
         self.inputarray=inputarray
         self.simulated = False
+        self.B = B
+        self.D = D
+        self.V = V
+        self.I_act0 = I_act0
+        self.cId0 = cId0 # I Nuevos dia 0
+        self.R  = R
+        self.Hc0 = Hc0 # Capacidad hospitalaria dia 0
+        self.H_incr = H_incr
+        self.H_incr2 = H_incr2
+        self.Vc0 = Vc0 # Capacidad ventiladores dia 0
+        self.V_incr = V_incr
+        self.V_incr2 = V_incr2       
+        self.H_cr = H_cr # Hospitalizados criticos dia 0
+        self.H0 = H0 # Hospitalizados totales dia 0
     
     def sim_run(self,tsim,max_mov,rem_mov,qp,iqt=0,fqt = 300,movfunct = 0):       
         case = SEIRHUDV(tsim,max_mov,rem_mov,qp,iqt,fqt,movfunct)
         case.beta = self.beta       
         case.mu = self.mu
-        # sol=test.integr(0,20,0.1,False)
+        case.B = self.B 
+        case.D = self.D 
+        case.V = self.V 
+        case.I_act0 = self.I_act0 
+        case.cId0 = self.cId0  # I Nuevos dia 0
+        case.R  = self.R  
+        case.Hc0 = self.Hc0  # Capacidad hospitalaria dia 0
+        case.Vc0 = self.Vc0  # Capacidad ventiladores dia 0
+        case.H_cr = self.H_cr  # Hospitalizados criticos dia 0
+        case.H0 = self.H0  # Hospitalizados totales dia 0
+        case.setrelationalvalues()        
         case.integr_sci(0,tsim,0.1,False)
         out=[case,max_mov,rem_mov,qp,tsim]
         return(out)   
@@ -159,10 +184,10 @@ class SEIRHUDV :
         self.dCH=lambda t,I_se,H_in,H_cr,H_out,CH:self.pseD/self.tseD*I_se*(1-self.h_sat(H_in,H_cr,H_out,t))-CH
         self.dACV=lambda t,CV: CV
         self.dACH=lambda t,CH: CH
-        self.dI_crD=lambda t,I_cr,H_in,H_cr,H_out: self.pcrD/self.tcrD*I_cr*(1-self.h_sat(H_in,H_cr,H_out,t))
-        self.dI_seD=lambda t,I_se,H_in,H_cr,H_out: self.pseD/self.tseD*I_se*(1-self.h_sat(H_in,H_cr,H_out,t))
-        self.dVD=lambda t,V: self.pVD/self.tVD*V
-        self.dH_crD=lambda t,H_cr,V: self.pcrinD/self.tcrinD*H_cr*(1-self.v_sat(V,t))
+        #self.dI_crD=lambda t,I_cr,H_in,H_cr,H_out: self.pcrD/self.tcrD*I_cr*(1-self.h_sat(H_in,H_cr,H_out,t))
+        #self.dI_seD=lambda t,I_se,H_in,H_cr,H_out: self.pseD/self.tseD*I_se*(1-self.h_sat(H_in,H_cr,H_out,t))
+        #self.dVD=lambda t,V: self.pVD/self.tVD*V
+        #self.dH_crD=lambda t,H_cr,V: self.pcrinD/self.tcrinD*H_cr*(1-self.v_sat(V,t)) 
 
 
     # UCI and UTI beds saturation function
@@ -205,7 +230,7 @@ class SEIRHUDV :
         self.psein = 1.0  # Transicion de Infectado serio a Hospitalizado (si no ha colapsado Htot)
         self.tsein = 1.0 
 
-        self.pincrin = 0.01 # Transicion de Hospitalizado a Hospitalizado Critico (si no ha colapsado Htot)
+        self.pincrin = 0.03 # Transicion de Hospitalizado a Hospitalizado Critico (si no ha colapsado Htot)
         self.tincrin = 3.0
 
         self.pcrcrin = 1.0 # Transicion de Infectado critico  a Hopsitalizado Critico (si no ha colapsado Htot)
@@ -223,7 +248,7 @@ class SEIRHUDV :
         self.pseD = 1.0 # Muerte de Infectado severo (si ha colapsado Htot)
         self.tseD = 3.0
 
-        self.pinout = 0.99 # Mejora de paciente severo hospitalizado, transita a Hout
+        self.pinout = 0.97 # Mejora de paciente severo hospitalizado, transita a Hout
         self.tinout = 4.0
 
         self.pVout = 0.5 # Mejora de ventilado hospitalizado, transita a Hout
@@ -235,7 +260,7 @@ class SEIRHUDV :
         self.poutR = 1.0 # Mejora del paciente hospitalizado, Hout a R
         self.toutR = 6.0
 
-        self.pDB = 1.0 # Entierro del finado
+        self.pDB = 1.0 # Entierros
         self.tDB = 1.0 
 
         self.eta = 0.0 # tasa de perdida de inmunidad (1/periodo)
@@ -252,24 +277,19 @@ class SEIRHUDV :
         #muS=mu
 
     def setinitvalues(self):
-        self.res=1
-        self.cIEx0=4000
+        # 15 de Mayo
+        self.I_act0 = 12642
+        self.res=1 
         self.cId0=2234
-        self.cI0S = self.res*4842
-        self.muS=self.mu
-
-        self.I_as= 0.3*self.cI0S 
-        self.I_mi= 0.6*self.cI0S 
-        self.I_cr= 0.03*self.cId0 
-        self.I_se = 0.07*self.cId0
-        self.E_as=0.3*self.muS*self.cIEx0
-        self.E_sy=0.7*self.muS*self.cIEx0
-        self.Htot=lambda t: 1997.0+23*t
-        self.H0=1731#1903.0
+        self.muS=self.mu        
+        self.H_incr = 34
+        self.H_incr2 = 0
+        self.V_incr = 17
+        self.V_incr2 = 0
+        self.Vc0 = 1029
+        self.Hc0 = 1980
+        self.H0=1720 #1980#1903.0
         self.H_cr=80.0
-        self.H_in=self.H0*0.5-self.H_cr/2
-        self.H_out=self.H0*0.5-self.H_cr/2
-        self.Vtot=lambda t:1029.0+18*t
         self.gw=5
         self.D=26.0
         self.B=221.0
@@ -281,14 +301,30 @@ class SEIRHUDV :
         self.CH=0
         self.ACV=0
         self.ACH=0
-        self.I_crD=0
-        self.I_seD=0
-        self.VD=0
-        self.H_crD=0
-        self.S=8125072.0-self.H0-self.V-self.D-(self.E_as+self.E_sy)-(self.I_as+self.I_cr+self.I_se+self.I_mi)
+        self.pop = 8125072
+        self.setrelationalvalues()
+#, B=221,D=26,V=758,I_act0=12642,cId0=2234,R=0,Hc0=1980,Vc0=1029,H_cr=80,H0=1720):
+    def setrelationalvalues(self):
+        # Infectados
+        self.cI0S = self.res*self.I_act0/2.5
+        self.cIEx0=self.I_act0/1.5
+        self.I_as= 0.3*self.cI0S 
+        self.I_mi= 0.6*self.cI0S 
+        self.I_cr= 0.03*self.cId0 
+        self.I_se = 0.07*self.cId0
+        # Expuestos
+        self.E_as=0.3*self.muS*self.cIEx0
+        self.E_sy=0.7*self.muS*self.cIEx0
+        # Hospitalizados
+        #self.V+=(self.I_act0-(self.I_as+self.I_mi+self.I_cr+self.I_se))*0.05
+        self.H_in=self.H0*0.5-self.H_cr/2 #+ (self.I_act0-(self.I_as+self.I_mi+self.I_cr+self.I_se))*0.1
+        self.H_out=self.H0*0.5-self.H_cr/2 
+        self.Htot=lambda t: self.Hc0+self.H_incr*t +self.H_incr2*t**2 # 1997.0        
+        self.Vtot=lambda t:self.Vc0+self.V_incr*t +self.V_incr2*t**2
+        # Valores globales
+        self.S=self.pop-self.H0-self.V-self.D-(self.E_as+self.E_sy)-(self.I_as+self.I_cr+self.I_se+self.I_mi)
         self.N=(self.S+self.E_as+self.E_sy+self.I_as+self.I_mi+self.I_se+self.I_cr+self.H_in+self.H_cr+self.H_out+self.V+self.D+self.R)
-        self.I=self.I_cr+self.I_as+self.I_se+self.I_mi
-
+        self.I=self.I_cr+self.I_as+self.I_se+self.I_mi        
 
         #constructor of SEIR class elements, it's initialized when a parameter
         #miminization is performed to adjust the best setting of the actual infected
@@ -331,54 +367,49 @@ class SEIRHUDV :
         #          - sawtooth: diente de cierra
         #          - square: onda cuadrada
         """
-        def alpha(t):
-            if movfunct=='total':
-                if t < -iqt:
-                    return(max_mov)
-                else:
-                    return(rem_mov)
+        def alpha(t):             
+            if 'square' in movfunct:
+               def f(t): 
+                   return signal.square(t)
+               if t<abs(iqt):
+                   if iqt>0:
+                       return(rem_mov)
+                   else:
+                       return(max_mov)
+               else:
+                   if qp == 0:
+                       return(max_mov)
+                   elif t<fqt:
+                       return((max_mov-rem_mov)/2*(f(np.pi / qp * t - np.pi))+(max_mov+rem_mov)/2)
+                   else:
+                       return(max_mov)   
 
-            elif movfunct =='once':        
+
+            elif 'once' in movfunct:        
                 if t<iqt:
-                    return(rem_mov)
-                else:
                     return(max_mov)
-                #if t<-iqt:
-                #    return(max_mov)
-                #elif t >fqt:
-                #    return(max_mov)
-                #elif iqt> 0 and t>iqt:
-                #    return(max_mov)
-                #else:
-                #    return(rem_mov)
-
-            elif movfunct =='sawtooth':
-                def f(t): 
-                    return signal.sawtooth(t)
-                if t<abs(iqt):
-                    if iqt>0:
-                        return(rem_mov)
-                    else:
-                        return(max_mov)
+                elif t>fqt:
+                    return(max_mov)
                 else:
-                    if t<fqt:
-                        return((max_mov-rem_mov)/2*(f(np.pi / qp * t - np.pi))+(max_mov+rem_mov)/2)
-                    else:
-                        return(max_mov)
+                    return(rem_mov)
 
-            elif movfunct =='square':
-                def f(t): 
-                    return signal.square(t)
-                if t<abs(iqt):
-                    if iqt>0:
-                        return(rem_mov)
-                    else:
-                        return(max_mov)
-                else:
-                    if t<fqt:
-                        return((max_mov-rem_mov)/2*(f(np.pi / qp * t - np.pi))+(max_mov+rem_mov)/2)
-                    else:
-                        return(max_mov)
+
+            elif 'sawtooth' in movfunct:
+               def f(t): 
+                   return signal.sawtooth(t)
+               if t<abs(iqt):
+                   if iqt>0:
+                       return(rem_mov)
+                   else:
+                       return(max_mov)
+               else:
+                   if qp == 0:
+                       return(max_mov)
+                   elif t<fqt:
+                       return((max_mov-rem_mov)/2*(f(np.pi / qp * t - np.pi))+(max_mov+rem_mov)/2)
+                   else:
+                       return(max_mov)   
+                     
         return(alpha)
 
 
@@ -419,10 +450,10 @@ class SEIRHUDV :
             CH0=self.CH
             ACV0=self.ACV
             ACH0=self.ACH
-            I_crD0=self.I_crD
-            I_seD0=self.I_seD
-            VD0=self.VD
-            H_crD0=self.H_crD
+            #I_crD0=self.I_crD
+            #I_seD0=self.I_seD
+            #VD0=self.VD
+            #H_crD0=self.H_crD
             print(self.H_out)
             self.t=np.arange(t0,T+h,h)
             
@@ -453,10 +484,10 @@ class SEIRHUDV :
             CH0=self.CH[idx]
             ACV0=self.ACV[idx]
             ACH0=self.ACH[idx]
-            I_crD0=self.I_crD[idx]
-            I_seD0=self.I_seD[idx]
-            VD0=self.VD[idx]
-            H_crD0=self.H_crD[idx]
+            #I_crD0=self.I_crD[idx]
+            #I_seD0=self.I_seD[idx]
+            #VD0=self.VD[idx]
+            #H_crD0=self.H_crD[idx]
 
             #set time grid
             self.t=np.arange(self.t[idx],T+h,h)
@@ -488,14 +519,14 @@ class SEIRHUDV :
             ydot[16]=self.dCH(t,y[5],y[7],y[8],y[9],y[16])
             ydot[17]=self.dACH(t,y[15])
             ydot[18]=self.dACV(t,y[16])
-            ydot[19]=self.dI_crD(t,y[6],y[7],y[8],y[9])               
-            ydot[20]=self.dI_seD(t,y[5],y[7],y[8],y[9])               
-            ydot[21]=self.dVD(t,y[10])                      
-            ydot[22]=self.dH_crD(t,y[8],y[10])                  
+            #ydot[19]=self.dI_crD(t,y[6],y[7],y[8],y[9])               
+            #ydot[20]=self.dI_seD(t,y[5],y[7],y[8],y[9])               
+            #ydot[21]=self.dVD(t,y[10])                      
+            #ydot[22]=self.dH_crD(t,y[8],y[10])                  
 
             
         initcond = np.array([S0,E_as0,E_sy0,I_as0,I_mi0,I_se0,I_cr0,
-                                H_in0,H_cr0,H_out0,V0,D0,B0,R0,I0,CV0,CH0,ACV0,ACH0,I_crD0,I_seD0,VD0,H_crD0])
+                                H_in0,H_cr0,H_out0,V0,D0,B0,R0,I0,CV0,CH0,ACV0,ACH0])#,I_crD0,I_seD0,VD0,H_crD0])
 
         # initcond = initcond.reshape(4*dim)
 
@@ -523,10 +554,10 @@ class SEIRHUDV :
         self.CH=sol.values.y[:,16]
         self.ACV=sol.values.y[:,17]
         self.ACH=sol.values.y[:,18]
-        self.I_crD=sol.values.y[:,19]
-        self.I_seD=sol.values.y[:,20]               
-        self.VD=sol.values.y[:,21]
-        self.H_crD=sol.values.y[:,22]                   
+        #self.I_crD=sol.values.y[:,19]
+        #self.I_seD=sol.values.y[:,20]               
+        #self.VD=sol.values.y[:,21]
+        #self.H_crD=sol.values.y[:,22]                   
         return(sol)
 
     def integr_sci(self,t0,T,h,E0init=False):
@@ -559,10 +590,10 @@ class SEIRHUDV :
             CH0=self.CH
             ACV0=self.ACV
             ACH0=self.ACH
-            I_crD0=self.I_crD
-            I_seD0=self.I_seD
-            VD0=self.VD
-            H_crD0=self.H_crD                
+            #I_crD0=self.I_crD
+            #I_seD0=self.I_seD
+            #VD0=self.VD
+            #H_crD0=self.H_crD                
             self.t=np.arange(t0,T+h,h)
             
         elif((min(self.t)<=t0) & (t0<=max(self.t))):
@@ -592,10 +623,10 @@ class SEIRHUDV :
             CH0=self.CH[idx]                
             ACV0=self.ACV[idx]
             ACH0=self.ACH[idx]
-            I_crD0=self.I_crD[idx]
-            I_seD0=self.I_seD[idx]
-            VD0=self.VD[idx]
-            H_crD0=self.H_crD[idx]
+            #I_crD0=self.I_crD[idx]
+            #I_seD0=self.I_seD[idx]
+            #VD0=self.VD[idx]
+            #H_crD0=self.H_crD[idx]
 
             #set time grid
             self.t=np.arange(self.t[idx],T+h,h)
@@ -629,13 +660,13 @@ class SEIRHUDV :
             ydot[16]=self.dCH(t,y[5],y[7],y[8],y[9],y[16])
             ydot[17]=self.dACH(t,y[15])
             ydot[18]=self.dACV(t,y[16])
-            ydot[19]=self.dI_crD(t,y[6],y[7],y[8],y[9])               
-            ydot[20]=self.dI_seD(t,y[5],y[7],y[8],y[9])               
-            ydot[21]=self.dVD(t,y[10])                      
-            ydot[22]=self.dH_crD(t,y[8],y[10])                                    
+            #ydot[19]=self.dI_crD(t,y[6],y[7],y[8],y[9])               
+            #ydot[20]=self.dI_seD(t,y[5],y[7],y[8],y[9])               
+            #ydot[21]=self.dVD(t,y[10])                      
+            #ydot[22]=self.dH_crD(t,y[8],y[10])                                    
             return(ydot)
         initcond = np.array([S0,E_as0,E_sy0,I_as0,I_mi0,I_se0,I_cr0,
-                                H_in0,H_cr0,H_out0,V0,D0,B0,R0,I0,CV0,CH0,ACV0,ACH0,I_crD0,I_seD0,VD0,H_crD0])
+                                H_in0,H_cr0,H_out0,V0,D0,B0,R0,I0,CV0,CH0,ACV0,ACH0])#,I_crD0,I_seD0,VD0,H_crD0])
 
         # initcond = initcond.reshape(4*dim)
         

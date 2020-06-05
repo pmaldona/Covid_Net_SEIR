@@ -474,7 +474,7 @@ from datetime import timedelta
 base = date(2020,5,15)
 index = [(base+timedelta(days=i)).strftime("%d/%m/%Y") for i in range(31)]
 dates = list(range(15,32))  
-dates.extend(list(range(1,14)))
+dates.extend(list(range(1,16)))
 dates = [str(i) for i in dates]
 days = len(dates)
 idx = [np.searchsorted(t[i],range(days+1)) for i in range(len(input))]
@@ -531,3 +531,4 @@ index = pd.DataFrame(dict(dates=index))
 datosminciencia = pd.concat([index,Iacdata,Bdata,Letalidad], axis=1, sort=False) 
 datosminciencia = datosminciencia.set_index('dates')
 datosminciencia.to_excel('/home/samuel/Covid_Net_SEIR/SEIRHVDB/Plots/ReporteMinCiencia25-05/datos-02.xls') 
+

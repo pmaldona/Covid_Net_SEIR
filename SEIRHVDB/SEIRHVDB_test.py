@@ -210,25 +210,25 @@ def sim(beta,mu):
         return(alpha)
 
 
-    def sim_run(tsim,max_mov,rem_mov,qp,tci=0,dtc = 300,movfunct = 'once'):    
-        alpha = alphafunct(max_mov,rem_mov,qp,tci,dtc,movfunct)
-        
-        case=SD.SEIRHUDV(alpha,Htot,Vtot,gw,mu,
-                S,E_as,E_sy,
-                I_as,I_mi,I_se,I_cr,
-                H_in,H_cr,H_out,V,D,B,R,CV,CH,ACH,ACV,
-                beta,betaD,eta,pSas,tSas,pSsy,tSsy,
-                pasas,tasas,psymi,tsymi,psyse,tsyse,psycr,tsycr,
-                pasR,tasR,pmiR,tmiR,psein,tsein,pseD,tseD,
-                pcrcrin,tcrcrin,pcrD,tcrD,
-                pincrin,tincrin,pinout,tinout,
-                pcrinV,tcrinV,pcrinD,tcrinD,pVout,tVout,poutR,toutR,
-                pVD,tVD,pDB,tDB)
+def sim_run(tsim,max_mov,rem_mov,qp,tci=0,dtc = 300,movfunct = 'once'):    
+    alpha = alphafunct(max_mov,rem_mov,qp,tci,dtc,movfunct)
+    
+    case=SD.SEIRHUDV(alpha,Htot,Vtot,gw,mu,
+            S,E_as,E_sy,
+            I_as,I_mi,I_se,I_cr,
+            H_in,H_cr,H_out,V,D,B,R,CV,CH,ACH,ACV,
+            beta,betaD,eta,pSas,tSas,pSsy,tSsy,
+            pasas,tasas,psymi,tsymi,psyse,tsyse,psycr,tsycr,
+            pasR,tasR,pmiR,tmiR,psein,tsein,pseD,tseD,
+            pcrcrin,tcrcrin,pcrD,tcrD,
+            pincrin,tincrin,pinout,tinout,
+            pcrinV,tcrinV,pcrinD,tcrinD,pVout,tVout,poutR,toutR,
+            pVD,tVD,pDB,tDB)
 
-        # sol=test.integr(0,20,0.1,False)
-        case.integr_sci(0,tsim,0.1,False)
-        out=[case,max_mov,rem_mov,qp,tsim]
-        return(out)   
+    # sol=test.integr(0,20,0.1,False)
+    case.integr_sci(0,tsim,0.1,False)
+    out=[case,max_mov,rem_mov,qp,tsim]
+    return(out)   
 
 
     tsim = 500
