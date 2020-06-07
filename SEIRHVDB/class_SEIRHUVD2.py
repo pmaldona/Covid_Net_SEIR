@@ -143,14 +143,14 @@ class SEIRHUDV :
         
         # Susceptibles
         # dS/dt:
-        self.dS=lambda t,S,E_as,E_sy,I_as,I_mi,D,R: -self.alpha(t)*self.beta*S*(E_as+E_sy+I_as+I_mi)/self.N-self.betaD*D+self.eta*R
+        self.dS=lambda t,S,E_as,E_sy,I_as,I_mi,D,R: -self.alpha(t)*self.beta*S*(I_as+I_mi)/self.N-self.betaD*D+self.eta*R
         
         # Exposed
         # dE_as/dt
-        self.dE_as=lambda t,S,E_as,E_sy,I_as,I_mi: self.pSas/self.tSas*self.alpha(t)*self.beta*S*(E_as+E_sy+I_as+I_mi)/self.N\
+        self.dE_as=lambda t,S,E_as,E_sy,I_as,I_mi: self.pSas/self.tSas*self.alpha(t)*self.beta*S*(I_as+I_mi)/self.N\
             -self.pasas/self.tasas*E_as
         # dE_sy/dt
-        self.dE_sy=lambda t,S,E_as,E_sy,I_as,I_mi: self.pSsy/self.tSsy*self.alpha(t)*self.beta*S*(E_as+E_sy+I_as+I_mi)/self.N\
+        self.dE_sy=lambda t,S,E_as,E_sy,I_as,I_mi: self.pSsy/self.tSsy*self.alpha(t)*self.beta*S*(I_as+I_mi)/self.N\
             -self.psymi/self.tsymi*E_sy-self.psyse/self.tsyse*E_sy-self.psycr/self.tsycr*E_sy
         
         # Infected
@@ -236,19 +236,19 @@ class SEIRHUDV :
         self.tasR = 15.0 
 
         self.pmiR = 1.0  # Transicion de Infectado mild a Recuperado
-        self.tmiR = 15.0
+        self.tmiR = 20.0
 
         self.psein = 1.0  # Transicion de Infectado serio a Hospitalizado (si no ha colapsado Htot)
-        self.tsein = 1.0 
+        self.tsein = 3.0 
 
         self.pincrin = 0.03 # Transicion de Hospitalizado a Hospitalizado Critico (si no ha colapsado Htot)
         self.tincrin = 3.0
 
         self.pcrcrin = 1.0 # Transicion de Infectado critico  a Hopsitalizado Critico (si no ha colapsado Htot)
-        self.tcrcrin = 1.0 
+        self.tcrcrin = 3.0 
 
         self.pcrinV = 1.0 # Transicion de Hospitalizado critico a Ventilado (si no ha colapsado V)
-        self.tcrinV = 1.0 
+        self.tcrinV = 0.01 
 
         self.pcrinD = 1.0 # Muerte de hospitalizado critico (Cuando V colapsa)
         self.tcrinD = 3.0 #
@@ -269,7 +269,7 @@ class SEIRHUDV :
         self.tVD = 15.0
 
         self.poutR = 1.0 # Mejora del paciente hospitalizado, Hout a R
-        self.toutR = 6.0
+        self.toutR = 10.0
 
         self.pDB = 1.0 # Entierros
         self.tDB = 1.0 
@@ -301,7 +301,7 @@ class SEIRHUDV :
         self.Hc0 = 1980
         self.H0=1720 #1980#1903.0
         self.H_cr=80.0
-        self.gw=5
+        self.gw=10
         self.D=26.0
         self.B=221.0
         self.R=0.0
@@ -320,19 +320,25 @@ class SEIRHUDV :
 #, B=221,D=26,V=758,I_act0=12642,cId0=2234,R=0,Hc0=1980,Vc0=1029,H_cr=80,H0=1720):
     def setrelationalvalues(self):
         # Infectados
-        self.cI0S = self.res*self.I_act0/2.5
-        self.cIEx0=self.I_act0/1.5
-        self.I_as= 0.3*self.cI0S 
-        self.I_mi= 0.6*self.cI0S 
-        self.I_cr= 0.03*self.cId0 
-        self.I_se = 0.07*self.cId0
+        #self.cI0S = self.res*self.I_act0/2.5
+        #self.cIEx0=self.I_act0/1.5
+        #self.I_as= 0.3*self.cI0S 
+        #self.I_mi= 0.6*self.cI0S 
+        #self.I_cr= 0.03*self.cId0 
+        #self.I_se = 0.07*self.cId0
+        self.I_as= 0.35*self.I_act0 
+        self.I_mi= 0.63*self.I_act0 
+        self.I_cr= 0.007*self.I_act0 
+        self.I_se = 0.013*self.I_act0        
         # Expuestos
-        self.E_as=0.3*self.muS*self.cIEx0
-        self.E_sy=0.7*self.muS*self.cIEx0
+        #self.E_as=0.3*self.muS*self.cIEx0
+        #self.E_sy=0.7*self.muS*self.cIEx0
+        self.E_as=0.3*self.mu*self.I_act0
+        self.E_sy=0.7*self.mu*self.I_act0        
         # Hospitalizados
         #self.V+=(self.I_act0-(self.I_as+self.I_mi+self.I_cr+self.I_se))*0.05
-        self.H_in=self.H0*0.5-self.H_cr/2 #+ (self.I_act0-(self.I_as+self.I_mi+self.I_cr+self.I_se))*0.1
-        self.H_out=self.H0*0.5-self.H_cr/2 
+        self.H_in=self.H0*0.42-self.H_cr/2 #+ (self.I_act0-(self.I_as+self.I_mi+self.I_cr+self.I_se))*0.1
+        self.H_out=self.H0*0.58-self.H_cr/2 
         self.Htot=lambda t: (self.Hc0+self.H_incr*t +self.H_incr2*t**2)*(1-expit(t-self.tsat)) + expit(t-self.tsat)*self.Hmax  # 1997.0        
         self.Vtot=lambda t: (self.Vc0+self.V_incr*t +self.V_incr2*t**2)*(1-expit(t-self.tsat)) + expit(t-self.tsat)*self.Vmax
         # Valores globales

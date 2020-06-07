@@ -21,7 +21,7 @@ from datetime import timedelta
 #        Importar Data Real       #
 # ------------------------------- #
 # Fecha de inicio de la simulación
-initdate = datetime(2020,4,3)
+initdate = datetime(2020,4,12)
 # Región 
 tstate = '13'
 
@@ -94,13 +94,13 @@ Br_tr = [(Br_dates[i]-initdate).days for i in range(len(Br))]
 #mov funct: 0 = once 1 = square
 tsim = 500
 inputarray=np.array([
-        [tsim,0.8,0.8,0,0,500,0],
-        [tsim,0.4,0.4,0,0,500,0],
-        [tsim,0.6,0.6,0,0,500,0],
-        [tsim,0.8,0.8,0,0,500,0],                
-        [tsim,0.4,0.4,0,0,28,0],
-        [tsim,0.6,0.6,0,0,28,0],
-        [tsim,0.8,0.8,0,0,28,0]])
+        [tsim,0.8,0.6,0,0,500,0],
+        [tsim,0.6,0.5,0,0,500,0],
+        [tsim,0.4,0.4,0,0,500,0]])#,        
+        #[tsim,0.8,0.8,0,0,500,0],                
+        #[tsim,0.4,0.4,0,0,28,0],
+        #[tsim,0.6,0.6,0,0,28,0],
+        #[tsim,0.8,0.8,0,0,28,0]
 
 ns = len(inputarray)
 
@@ -141,19 +141,20 @@ Optimistas
 # -------------- #
 
 
-beta = 0.17
-mu = 2.3
+beta = 0.18#25#0.19
+mu = 0.6#2.6
 B = Br[0]  # Muertos acumulados al dia de inicio
 D = Br[1]-Br[0]  # Muertos en el dia de inicio
-V = Vr[0]   # Ventilados al dia de inicio
-I_act0 = Ir[0]*10  # Infectados Activos al dia de inicio
-cId0 = Ir[1]-Ir[0]# cId0 # I Nuevos dia 0
+
+fI = 3.8
+
+I_act0 = fI*Ir[0]  # Infectados Activos al dia de inicio
+cId0 = fI*(Ir[1]-Ir[0])# cId0 # I Nuevos dia 0
 R  = 0   # Recuperados al dia de inicio
 
-
 # Dinámica del aumento de camas
-
-H_cr = Vr[0] # Hospitalizados criticos dia 0
+V = Vr[0]   # Ventilados al dia de inicio
+H_cr = 0#Vr[0]*0.01 # Hospitalizados criticos dia 0
 H0 = Hr[0] # Hospitalizados totales dia 0
 
 Hcmodel = np.poly1d(np.polyfit(sochimi_tr, Hr_tot, 2)) 
@@ -164,7 +165,7 @@ H_incr2 = Hcmodel[2]
 Vc0=Vcmodel[0]#1029
 V_incr = Vcmodel[1]
 V_incr2 = Vcmodel[2]
-tsat = (datetime(2020,6,15)-initdate).days
+tsat = (datetime(2020,7,8)-initdate).days
 Hmax = Hcmodel(tsat)
 Vmax = Vcmodel(tsat)
 
@@ -208,7 +209,9 @@ I_cr = [sims[i][0].I_cr for i in range(len(inputarray))]
 
 
 # Expuestos totales diarios
-E = [sims[i][0].E_as+sims[i][0].E_sy for i in range(len(inputarray))] 
+E = [sims[i][0].E_as+sims[i][0].E_sy for i in range(len(inputarray))]
+E_as = [sims[i][0].E_as for i in range(len(inputarray))]  
+E_sy = [sims[i][0].E_sy for i in range(len(inputarray))]  
 # Enterrados/Muertos acumulados
 B = [sims[i][0].B for i in range(len(inputarray))] 
 # Muertos diarios
@@ -221,7 +224,7 @@ V = [sims[i][0].V for i in range(len(inputarray))]
 # Variables temporales
 t = [sims[i][0].t for i in range(len(inputarray))] 
 dt = [np.diff(t[i]) for i in range(len(inputarray))] 
-tr = range(tsim)
+#tr = range(tsim)
 idx = [np.searchsorted(t[i],tr) for i in range(len(inputarray))] 
 
 
@@ -246,8 +249,8 @@ ACV = [sims[i][0].ACV for i in range(len(inputarray))]
 #                         Estudio Resultados                         #
 # ------------------------------------------------------------------ #
 
-[sims[0][0].h_sat(sims[0][0].H_in[i],sims[0][0].H_cr[i],sims[0][0].H_out[i],t[0][i]) for i in range(len(t[0]))] 
-
+Hsat = [sims[0][0].h_sat(sims[0][0].H_in[i],sims[0][0].H_cr[i],sims[0][0].H_out[i],t[0][i]) for i in range(len(t[0]))] 
+#Htot    
 
 # -------------------------------- #
 #        Graficar resultados       #
@@ -290,8 +293,8 @@ err_vent = [LA.norm(Vr-V[i][idx[i]])/LA.norm(Vr) for i in range(len(inputarray))
 plt.scatter(sochimi_tr,Hr,label='Camas Ocupadas reales')
 plt.scatter(sochimi_tr,Vr,label='Ventiladores Ocupados reales')
 
-plt.scatter(sochimi_tr,Hr_tot,label='Capacidad de Camas')
-plt.scatter(sochimi_tr,Vr_tot,label='Capacidad de Ventiladores')
+#plt.scatter(sochimi_tr,Hr_tot,label='Capacidad de Camas')
+#plt.scatter(sochimi_tr,Vr_tot,label='Capacidad de Ventiladores')
 
 Htot = [sims[0][0].Htot(i) for i in t[0][:endD[0]]]
 Vtot = [sims[0][0].Vtot(i) for i in t[0][:endD[0]]]
@@ -300,18 +303,16 @@ plt.plot(t[0][:endD[0]],Htot,color='lime')
 plt.plot(t[0][:endD[0]],Vtot,color='lime')
 
 i = 0
-
-plt.plot(t[i][:endD[i]],H_bed[i][:endD[i]],label='Camas utilizadas',color = 'red' ,linestyle = 'dashed')
-plt.plot(t[i][:endD[i]],V[i][:endD[i]],label='Camas utilizadas' ,color = 'blue' ,linestyle = 'dashed')
+plt.plot(t[i][:endD[i]],H_bed[i][:endD[i]],label='Camas utilizadas mov='+str(inputarray[i][1]),color = 'red' ,linestyle = 'dashed')
+plt.plot(t[i][:endD[i]],V[i][:endD[i]],label='VMI Utilizados mov='+str(inputarray[i][1]),color = 'blue' ,linestyle = 'dashed')
 i = 1
 #plt.plot([], [], ' ', label='err_bed: '+str(round(100*err_bed[i],2))+'%')
 #plt.plot([], [], ' ', label='err_vent: '+str(round(100*err_vent[i],2))+'%')
-plt.plot(t[i][:endD[i]],H_bed[i][:endD[i]],label='Camas utilizadas',color = 'red' ,linestyle = 'solid')
-plt.plot(t[i][:endD[i]],V[i][:endD[i]],label='Camas utilizadas',color = 'blue' ,linestyle = 'solid')
+plt.plot(t[i][:endD[i]],H_bed[i][:endD[i]],label='Camas utilizadas mov='+str(inputarray[i][1]),color = 'red' ,linestyle = 'solid')
+plt.plot(t[i][:endD[i]],V[i][:endD[i]],label='VMI Utilizados mov='+str(inputarray[i][1]),color = 'blue' ,linestyle = 'solid')
 i = 2
-
-#plt.plot(t[i][:endD[i]],H_bed[i][:endD[i]],label='Camas utilizadas',color = 'red' ,linestyle = 'dashed')
-#plt.plot(t[i][:endD[i]],V[i][:endD[i]],label='Camas utilizadas',color = 'blue' ,linestyle = 'dashed')
+plt.plot(t[i][:endD[i]],H_bed[i][:endD[i]],label='Camas utilizadas mov='+str(inputarray[i][1]),color = 'red' ,linestyle = 'dashed')
+plt.plot(t[i][:endD[i]],V[i][:endD[i]],label='Camas utilizadas mov='+str(inputarray[i][1]),color = 'blue' ,linestyle = 'dashed')
 
 plot(title = 'Camas',xlabel='Dias desde '+datetime.strftime(initdate,'%Y-%m-%d'))
 
@@ -337,6 +338,41 @@ plt.plot(t[i][:endD[i]],V[i][:endD[i]],label='Camas utilizadas',color = 'blue' ,
 plot(title = 'Camas',xlabel='Dias desde '+datetime.strftime(initdate,'%Y-%m-%d'))
 
 
+# ----------------------------- #
+#       Hospitalizados          #
+# ----------------------------- #
+# ----------- #
+#     Time    #
+# ----------- #
+
+idx = [np.searchsorted(t[i],sochimi_tr) for i in range(len(inputarray))]
+
+
+# ----------- #
+#     Plot    #
+# ----------- #
+
+i = 1
+plt.plot(t[i][:endD[i]],H_in[i][:endD[i]],label='Hin',linestyle = 'solid')
+plt.plot(t[i][:endD[i]],H_out[i][:endD[i]],label='Hout',linestyle = 'solid')
+plt.plot(t[i][:endD[i]],H_crin[i][:endD[i]],label='Hcr_in',linestyle = 'solid')
+
+plot(title = 'Camas',xlabel='Dias desde '+datetime.strftime(initdate,'%Y-%m-%d'))
+
+#
+# Hrate
+#
+
+i=1
+Hrate = H_in[i]/H_out[i] 
+plt.plot(t[i][:endD[i]],Hrate[:endD[i]],label='Hrate',linestyle = 'solid')
+plot(title = 'Razón Hin/Hout',xlabel='Dias desde '+datetime.strftime(initdate,'%Y-%m-%d'))
+
+i=1
+plt.plot(t[i][:endD[i]],(H_in[i]/H_sum[i])[:endD[i]],label='Hin',linestyle = 'solid')
+plt.plot(t[i][:endD[i]],(H_out[i]/H_sum[i])[:endD[i]],label='Hout',linestyle = 'solid')
+plot(title = 'Rate Hin y Hout / Hsum',xlabel='Dias desde '+datetime.strftime(initdate,'%Y-%m-%d'))
+
 
 # -------------------------------------- #
 #       Activos simulados vs reales      #
@@ -354,7 +390,7 @@ I_act_shift = [I_act[i] - I[0][0] + Ir[0] for i in range(len(inputarray))]
 #endday =  date(2020,6,2)
 #days = (endday-initday).days
 #endD = [np.searchsorted(t[i],days) for i in range(len(inputarray))]
-#idx = [np.searchsorted(t[i],tr) for i in range(len(inputarray))]
+idx = [np.searchsorted(t[i],tr) for i in range(len(inputarray))]
 
 # ----------- #
 #     Error   #
@@ -367,12 +403,13 @@ err = [LA.norm(Ir-I[i][idx[i]])/LA.norm(Ir) for i in range(len(inputarray))]
 # ----------- #
 plt.plot([], [], ' ', label='err: '+str(round(100*err[i],2))+'%')
 plt.scatter(tr,Ir,label='Infectados Activos reales')
-i = 0
-plt.plot(t[i][:endD[i]],I_shift[i][:endD[i]],label='Infectados Mov = '+str(inputarray[i][1]))
+#i = 0
+#plt.plot(t[i][:endD[i]],I_shift[i][:endD[i]],label='Infectados Mov = '+str(inputarray[i][1]))
 i = 1
-plt.plot(t[i][:endD[i]],I_shift[i][:endD[i]],label='Infectados Mov = '+str(inputarray[i][1]))
-i = 2
-plt.plot(t[i][:endD[i]],I_shift[i][:endD[i]],label='Infectados Mov = '+str(inputarray[i][1]))
+plt.plot(t[i][:endD[i]],I[i][:endD[i]],label='Infectados Mov = '+str(inputarray[i][1]))
+#i = 2
+#plt.plot(t[i][:endD[i]],I_shift[i][:endD[i]],label='Infectados Mov = '+str(inputarray[i][1]))
+plt.xlim(0,55)
 plot(title = 'Activos',xlabel='Dias desde '+datetime.strftime(initdate,'%Y-%m-%d'))
 
 
@@ -389,7 +426,7 @@ plot(title = 'Activos',xlabel='Dias desde '+datetime.strftime(initdate,'%Y-%m-%d
 #endday =  date(2020,6,30)
 #days = (endday-initday).days
 #endD = [np.searchsorted(t[i],days) for i in range(len(inputarray))]
-#idx = [np.searchsorted(t[i],Br_tr) for i in range(len(inputarray))]
+idx = [np.searchsorted(t[i],Br_tr) for i in range(len(inputarray))]
 
 # ----------- #
 #     Error   #
@@ -402,12 +439,12 @@ err = [LA.norm(Br-B[i][idx[i]])/LA.norm(Br) for i in range(len(inputarray))]
 # ----------- #
 plt.plot([], [], ' ', label='err: '+str(round(100*err[i],2))+'%')
 plt.scatter(Br_tr,Br,label='Fallecidos reales')
-i = 0
-plt.plot(t[i][:endD[i]],B[i][:endD[i]],label='Fallecidos Mov = '+str(inputarray[i][1]))
+#i = 0
+#plt.plot(t[i][:endD[i]],B[i][:endD[i]],label='Fallecidos Mov = '+str(inputarray[i][1]))
 i = 1
 plt.plot(t[i][:endD[i]],B[i][:endD[i]],label='Fallecidos Mov = '+str(inputarray[i][1]))
-i = 2
-plt.plot(t[i][:endD[i]],B[i][:endD[i]],label='Fallecidos Mov = '+str(inputarray[i][1]))
+#i = 2
+#plt.plot(t[i][:endD[i]],B[i][:endD[i]],label='Fallecidos Mov = '+str(inputarray[i][1]))
 plot(title = 'Fallecidos',xlabel='Dias desde '+datetime.strftime(initdate,'%Y-%m-%d'))
 
 
@@ -527,6 +564,48 @@ plt.plot(t[i],I_cr[i],label='Acumulados Criticos')
 plot(title='Infectados Simulados')
 
 
+# ---------------------------------------- #
+#       Proporcionalidad Infectados        #
+# ---------------------------------------- #
+Isum = [sims[i][0].I_as+sims[i][0].I_cr + sims[i][0].I_mi + sims[i][0].I_se for i in range(len(inputarray))] 
+
+plt.plot(t[i],I_as[i]/Isum[i],label='Acumulados asintomáticos')
+plt.plot(t[i],I_mi[i]/Isum[i],label='Acumulados Mild')
+plt.plot(t[i],I_se[i]/Isum[i],label='Acumulados Severos')
+plt.plot(t[i],I_cr[i]/Isum[i],label='Acumulados Criticos')
+plot(title='Infectados Simulados')
+
+
+# ------------------------------ #
+#       Curvas Expuestos         #
+# ------------------------------ #
+initday = initdate#date(2020,3,15)
+enddate =  datetime(2020,6,30)
+days = (enddate-initdate).days
+endD = [np.searchsorted(t[i],days) for i in range(len(inputarray))]
+Isum = [sims[i][0].I_as+sims[i][0].I_cr + sims[i][0].I_mi + sims[i][0].I_se for i in range(len(inputarray))] 
+
+i=1
+plt.plot(t[i][:endD[i]],Isum[i][:endD[i]],label='Infectados')
+plt.plot(t[i][:endD[i]],E[i][:endD[i]],label='Expuestos')
+#plt.plot(t[i][:endD[i]],E_sy[i][:endD[i]],label='Expuestos sintomáticos')
+plot(title='Expuestos - mu ='+str(mu)+' beta='+str(beta))
+
+
+# ------------------------------ #
+#       Curvas Expuestos         #
+# ------------------------------ #
+initday = initdate#date(2020,3,15)
+enddate =  datetime(2020,6,30)
+days = (enddate-initdate).days
+endD = [np.searchsorted(t[i],days) for i in range(len(inputarray))]
+
+Isum = [sims[i][0].I_as+sims[i][0].I_cr + sims[i][0].I_mi + sims[i][0].I_se for i in range(len(inputarray))] 
+
+i=1
+EIrate = E[i]/Isum[i]
+plt.plot(t[i][:endD[i]],EIrate[:endD[i]],label='Tasa Expuestos/Infectados')
+plot(title='Expuestos - mu ='+str(mu)+' beta='+str(beta))
 
 
 
