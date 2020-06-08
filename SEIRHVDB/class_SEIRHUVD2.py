@@ -34,25 +34,12 @@ Instructions:
 
 class simSEIRHVD:
     definputarray=np.array([
-            [500,0.85,0.6,14,14,500,0],
-            [500,0.85,0.7,14,14,500,0],
-            [500,0.85,0.8,14,14,500,0],
-            [500,0.85,0.6,14,21,500,0],
-            [500,0.85,0.7,14,21,500,0],
-            [500,0.85,0.8,14,21,500,0],
-            [500,0.85,0.7,14,60,500,1],
-            [500,0.85,0.7,21,60,500,1],
-            [500,0.55,0.2,14,14,500,0],
-            [500,0.55,0.3,14,14,500,0],
-            [500,0.55,0.4,14,14,500,0],
-            [500,0.55,0.2,14,21,500,0],
-            [500,0.55,0.3,14,21,500,0],
-            [500,0.55,0.4,14,21,500,0],        
-            [500,0.55,0.3,14,60,500,1],
-            [500,0.55,0.3,21,60,500,1]])
+            [500,0.8,0.6,0,0,500,0],
+            [500,0.6,0.5,0,0,500,0],
+            [500,0.4,0.4,0,0,500,0]])            
 
 
-    def __init__(self,beta = 0.19, mu =2.6 , inputarray = definputarray,B=221,D=26,V=758,I_act0=12642,cId0=2234,R=0,Hc0=1980,H_incr=34,H_incr2=0,Vc0=1029,V_incr=17,V_incr2=0,H_cr=80,H0=1720,tsat=30,Hmax=4000,Vmax=2000):
+    def __init__(self,beta = 0.19, mu =2.6,inputarray = definputarray,B=221,D=26,V=758,I_act0=12642,cId0=2234,R=0,Hc0=1980,H_incr=34,H_incr2=0,Vc0=1029,V_incr=17,V_incr2=0,H_cr=80,H0=1720,tsat=30,Hmax=4000,Vmax=2000):
         self.mu = mu
         self.beta = beta 
         self.sims = []
@@ -126,9 +113,10 @@ class simSEIRHVD:
 
 class SEIRHUDV :  
     def __init__(self,tsim,max_mov,rem_mov,qp,iqt,fqt,movfunct):
-        
+        print(max_mov)
         self.setparams()
         self.setinitvalues()  
+        print(max_mov)
         self.setscenario(tsim,max_mov,rem_mov,qp,iqt,fqt,movfunct)        
         #global mobility reduction parameters
         #self.alpha=alpha
