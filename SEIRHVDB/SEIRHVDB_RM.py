@@ -68,10 +68,10 @@ Hr_tot =  sochimi['camas_totales']
 sochimi_dates = [datetime.strptime(sochimi['dates'][i][:10],'%Y-%m-%d') for i in range(len(sochimi))]
 
 index = np.where(np.array(sochimi_dates) >= initdate)[0][0] 
-Hr=Hr[index:]
-Vr=Vr[index:]
-Hr_tot=Hr_tot[index:]
-Vr_tot=Vr_tot[index:]
+Hr=list(Hr[index:])
+Vr=list(Vr[index:])
+Hr_tot=list(Hr_tot[index:])
+Vr_tot=(list(Vr_tot[index:]))
 sochimi_dates = sochimi_dates[index:]
 sochimi_tr = [(sochimi_dates[i]-initdate).days for i in range(len(Hr))]
 
@@ -117,9 +117,9 @@ ED_tr = [(ED_RM_dates[i]-initdate).days for i in range(len(ED_RM))]
 #mov funct: 0 = once 1 = square
 tsim = 500
 inputarray=np.array([
-        [tsim,0.8,0.8,0,0,500,0],
-        [tsim,0.6,0.6,0,0,500,0],
-        [tsim,0.4,0.4,0,0,500,0]])#,        
+        [tsim,0.85,0.6,0,0,28,0],
+        [tsim,0.85,0.65,0,0,28,0],
+        [tsim,0.85,0.70,0,0,28,0]])#,        
         #[tsim,0.8,0.8,0,0,500,0],                
         #[tsim,0.4,0.4,0,0,28,0],
         #[tsim,0.6,0.6,0,0,28,0],
@@ -163,36 +163,41 @@ Optimistas
 #    Simulate    #
 # -------------- #
 
+# Parametros de la simulacion
+beta = 0.15#25#0.19
+mu = 1.1#2.6
+fI = 3.0
 
-beta = 0.18#25#0.19
-mu = 0.6#2.6
+
+# Valores iniciales
 B = Br[0]  # Muertos acumulados al dia de inicio
 D = Br[1]-Br[0]  # Muertos en el dia de inicio
-
-fI = 3.8
-
 I_act0 = fI*Ir[0]  # Infectados Activos al dia de inicio
 cId0 = fI*(Ir[1]-Ir[0])# cId0 # I Nuevos dia 0
 R  = 0   # Recuperados al dia de inicio
+
 
 # Dinámica del aumento de camas
 V = Vr[0]   # Ventilados al dia de inicio
 H_cr = 0#Vr[0]*0.01 # Hospitalizados criticos dia 0
 H0 = Hr[0] # Hospitalizados totales dia 0
 
-Hcmodel = np.poly1d(np.polyfit(sochimi_tr, Hr_tot, 2)) 
-Vcmodel = np.poly1d(np.polyfit(sochimi_tr, Vr_tot, 2)) 
+bedmodelorder = 1
+Hcmodel = np.poly1d(np.polyfit(sochimi_tr, Hr_tot, bedmodelorder)) 
+Vcmodel = np.poly1d(np.polyfit(sochimi_tr, Vr_tot, bedmodelorder)) 
 Hc0=Hcmodel[0]#1980
 H_incr=Hcmodel[1]
 H_incr2 = Hcmodel[2]
+H_incr3 = Hcmodel[3]
 Vc0=Vcmodel[0]#1029
 V_incr = Vcmodel[1]
 V_incr2 = Vcmodel[2]
-tsat = (datetime(2020,7,8)-initdate).days
+V_incr3 = Vcmodel[3]
+tsat = (datetime(2020,7,1)-initdate).days 
 Hmax = Hcmodel(tsat)
 Vmax = Vcmodel(tsat)
 
-model = SD2.simSEIRHVD(beta = beta, mu = mu, inputarray= inputarray, B=B,D=D,V=V,I_act0=I_act0,cId0=cId0,R=R,Hc0=Hc0,H_incr=H_incr,H_incr2=H_incr2,Vc0=Vc0,V_incr=V_incr,V_incr2=V_incr2,H_cr=H_cr,H0=H0,tsat=tsat,Hmax=Hmax,Vmax=Vmax)
+model = SD2.simSEIRHVD(beta = beta, mu = mu, inputarray= inputarray, B=B,D=D,V=V,I_act0=I_act0,cId0=cId0,R=R,Hc0=Hc0,H_incr=H_incr,H_incr2=H_incr2,H_incr3=H_incr3,Vc0=Vc0,V_incr=V_incr,V_incr2=V_incr2,V_incr3=V_incr3,H_cr=H_cr,H0=H0,tsat=tsat,Hmax=Hmax,Vmax=Vmax)
 sims = model.simulate()
 Iac15M = 29276
 
@@ -271,7 +276,20 @@ ACV = [sims[i][0].ACV for i in range(len(inputarray))]
 #                         Estudio Resultados                         #
 # ------------------------------------------------------------------ #
 
-Hsat = [sims[0][0].h_sat(sims[0][0].H_in[i],sims[0][0].H_cr[i],sims[0][0].H_out[i],t[0][i]) for i in range(len(t[0]))] 
+# ----------------------------------------- #
+#        Cálculo de la fecha del Peak       #
+# ----------------------------------------- #
+#initdateseir = 1
+#peaktotalcaso1 = np.where(np.array(totalcaso1) == max(totalcaso1))  
+#peaktotalcaso2 = np.where(np.array(totalcaso2) == max(totalcaso2))  
+#peaktotalcaso3 = np.where(np.array(totalcaso3) == max(totalcaso3))  
+
+#SEIRHVD
+#initdateseirhvd = 1
+#peakrealista = np.where(I1==max(I1))[0][0] 
+#peakoptimista = np.where(I2==max(I2))[0][0] 
+
+#Hsat = [sims[0][0].h_sat(sims[0][0].H_in[i],sims[0][0].H_cr[i],sims[0][0].H_out[i],t[0][i]) for i in range(len(t[0]))] 
 #Htot    
 
 # -------------------------------- #
@@ -296,7 +314,7 @@ def plot(title='',xlabel='',ylabel=''):
 # ----------- #
 
 initday = initdate#date(2020,3,15)
-enddate =  datetime(2020,6,30)
+enddate =  datetime(2020,7,15)
 days = (enddate-initdate).days
 #initD 
 endD = [np.searchsorted(t[i],days) for i in range(len(inputarray))]
@@ -312,11 +330,20 @@ err_vent = [LA.norm(Vr-V[i][idx[i]])/LA.norm(Vr) for i in range(len(inputarray))
 # ----------- #
 #     Plot    #
 # ----------- #
+
+# Fin de cuarentena
+plt.axvline(x=28,linestyle = 'dashed',color = 'grey')
+
 plt.scatter(sochimi_tr,Hr,label='Camas Ocupadas reales')
 plt.scatter(sochimi_tr,Vr,label='Ventiladores Ocupados reales')
 
-plt.scatter(sochimi_tr,Hr_tot,label='Capacidad de Camas')
-plt.scatter(sochimi_tr,Vr_tot,label='Capacidad de Ventiladores')
+#plt.scatter(sochimi_tr,Hr_tot,label='Capacidad de Camas')
+#plt.scatter(sochimi_tr,Vr_tot,label='Capacidad de Ventiladores')
+
+
+plt.plot([], [], ' ', label='beta: '+str(beta))
+plt.plot([], [], ' ', label='mu: '+str(mu))
+plt.plot([], [], ' ', label='factor B-Y: '+str(fI))
 
 Htot = [sims[0][0].Htot(i) for i in t[0][:endD[0]]]
 Vtot = [sims[0][0].Vtot(i) for i in t[0][:endD[0]]]
@@ -325,17 +352,18 @@ plt.plot(t[0][:endD[0]],Htot,color='lime')
 plt.plot(t[0][:endD[0]],Vtot,color='lime')
 
 i = 0
-plt.plot(t[i][:endD[i]],H_bed[i][:endD[i]],label='Camas utilizadas mov='+str(inputarray[i][1]),color = 'red' ,linestyle = 'dashed')
-plt.plot(t[i][:endD[i]],V[i][:endD[i]],label='VMI Utilizados mov='+str(inputarray[i][1]),color = 'blue' ,linestyle = 'dashed')
+plt.plot(t[i][:endD[i]],H_bed[i][:endD[i]],label='Camas utilizadas mov='+str(inputarray[i][2]),color = 'red' ,linestyle = 'dashed')
+plt.plot(t[i][:endD[i]],V[i][:endD[i]],label='VMI Utilizados mov='+str(inputarray[i][2]),color = 'blue' ,linestyle = 'dashed')
 i = 1
 #plt.plot([], [], ' ', label='err_bed: '+str(round(100*err_bed[i],2))+'%')
 #plt.plot([], [], ' ', label='err_vent: '+str(round(100*err_vent[i],2))+'%')
-plt.plot(t[i][:endD[i]],H_bed[i][:endD[i]],label='Camas utilizadas mov='+str(inputarray[i][1]),color = 'red' ,linestyle = 'solid')
-plt.plot(t[i][:endD[i]],V[i][:endD[i]],label='VMI Utilizados mov='+str(inputarray[i][1]),color = 'blue' ,linestyle = 'solid')
+plt.plot(t[i][:endD[i]],H_bed[i][:endD[i]],label='Camas utilizadas mov='+str(inputarray[i][2]),color = 'red' ,linestyle = 'solid')
+plt.plot(t[i][:endD[i]],V[i][:endD[i]],label='VMI Utilizados mov='+str(inputarray[i][2]),color = 'blue' ,linestyle = 'solid')
 i = 2
-plt.plot(t[i][:endD[i]],H_bed[i][:endD[i]],label='Camas utilizadas mov='+str(inputarray[i][1]),color = 'red' ,linestyle = 'dashed')
-plt.plot(t[i][:endD[i]],V[i][:endD[i]],label='Camas utilizadas mov='+str(inputarray[i][1]),color = 'blue' ,linestyle = 'dashed')
+plt.plot(t[i][:endD[i]],H_bed[i][:endD[i]],label='Camas utilizadas mov='+str(inputarray[i][2]),color = 'red' ,linestyle = 'dashed')
+plt.plot(t[i][:endD[i]],V[i][:endD[i]],label='Camas utilizadas mov='+str(inputarray[i][2]),color = 'blue' ,linestyle = 'dashed')
 
+plt.xlim(0,80)
 plot(title = 'Camas',xlabel='Dias desde '+datetime.strftime(initdate,'%Y-%m-%d'))
 
 

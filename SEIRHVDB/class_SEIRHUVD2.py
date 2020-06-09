@@ -39,7 +39,7 @@ class simSEIRHVD:
             [500,0.4,0.4,0,0,500,0]])            
 
 
-    def __init__(self,beta = 0.19, mu =2.6,inputarray = definputarray,B=221,D=26,V=758,I_act0=12642,cId0=2234,R=0,Hc0=1980,H_incr=34,H_incr2=0,Vc0=1029,V_incr=17,V_incr2=0,H_cr=80,H0=1720,tsat=30,Hmax=4000,Vmax=2000):
+    def __init__(self,beta = 0.19, mu =2.6,inputarray = definputarray,B=221,D=26,V=758,I_act0=12642,cId0=2234,R=0,Hc0=1980,H_incr=34,H_incr2=0,H_incr3=0,Vc0=1029,V_incr=17,V_incr2=0,V_incr3=0,H_cr=80,H0=1720,tsat=30,Hmax=4000,Vmax=2000):
         self.mu = mu
         self.beta = beta 
         self.sims = []
@@ -54,9 +54,11 @@ class simSEIRHVD:
         self.Hc0 = Hc0 # Capacidad hospitalaria dia 0
         self.H_incr = H_incr
         self.H_incr2 = H_incr2
+        self.H_incr3 = H_incr3
         self.Vc0 = Vc0 # Capacidad ventiladores dia 0
         self.V_incr = V_incr
         self.V_incr2 = V_incr2       
+        self.V_incr3 = V_incr3       
         self.H_cr = H_cr # Hospitalizados criticos dia 0
         self.H0 = H0 # Hospitalizados totales dia 0
         self.tsat = tsat
@@ -77,8 +79,10 @@ class simSEIRHVD:
         case.Vc0 = self.Vc0  # Capacidad ventiladores dia 0
         case.H_incr = self.H_incr
         case.H_incr2 =self.H_incr2
+        case.H_incr3 =self.H_incr3
         case.V_incr = self.V_incr
-        case.V_incr2 = self.V_incr2                
+        case.V_incr2 = self.V_incr2
+        case.V_incr3 = self.V_incr3
         case.H_cr = self.H_cr  # Hospitalizados criticos dia 0
         case.H0 = self.H0  # Hospitalizados totales dia 0
         case.tsat = self.tsat
@@ -283,8 +287,10 @@ class SEIRHUDV :
         self.muS=self.mu        
         self.H_incr = 34
         self.H_incr2 = 0
+        self.H_incr3 = 0
         self.V_incr = 17
         self.V_incr2 = 0
+        self.V_incr3 = 0
         self.Vc0 = 1029
         self.Hc0 = 1980
         self.H0=1720 #1980#1903.0
@@ -327,8 +333,8 @@ class SEIRHUDV :
         #self.V+=(self.I_act0-(self.I_as+self.I_mi+self.I_cr+self.I_se))*0.05
         self.H_in=self.H0*0.42-self.H_cr/2 #+ (self.I_act0-(self.I_as+self.I_mi+self.I_cr+self.I_se))*0.1
         self.H_out=self.H0*0.58-self.H_cr/2 
-        self.Htot=lambda t: (self.Hc0+self.H_incr*t +self.H_incr2*t**2)*(1-expit(t-self.tsat)) + expit(t-self.tsat)*self.Hmax  # 1997.0        
-        self.Vtot=lambda t: (self.Vc0+self.V_incr*t +self.V_incr2*t**2)*(1-expit(t-self.tsat)) + expit(t-self.tsat)*self.Vmax
+        self.Htot=lambda t: (self.Hc0+self.H_incr*t +self.H_incr2*t**2 +self.H_incr3*t**3)*(1-expit(t-self.tsat)) + expit(t-self.tsat)*self.Hmax  # 1997.0        
+        self.Vtot=lambda t: (self.Vc0+self.V_incr*t +self.V_incr2*t**2 +self.V_incr3*t**3)*(1-expit(t-self.tsat)) + expit(t-self.tsat)*self.Vmax
         # Valores globales
         self.S=self.pop-self.H0-self.V-self.D-(self.E_as+self.E_sy)-(self.I_as+self.I_cr+self.I_se+self.I_mi)
         self.N=(self.S+self.E_as+self.E_sy+self.I_as+self.I_mi+self.I_se+self.I_cr+self.H_in+self.H_cr+self.H_out+self.V+self.D+self.R)
