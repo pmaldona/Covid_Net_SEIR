@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import sys
-sys.path.insert(1, '../SEIR_Class_beta/')
-sys.path.insert(1, '../SEIRHVDB/')
-sys.path.insert(1, '../SEIRUNI/')
-sys.path.insert(1, '../SEIRMULTI/')
+sys.path.append('../SEIR_Class_beta/')
+sys.path.append('../SEIRHVDB/')
+sys.path.append('../SEIRUNI/')
+sys.path.append('../SEIRMULTI/')
 
 from class_SEIR import SEIR
 from  SEIRrefiner import SEIRrefiner 
