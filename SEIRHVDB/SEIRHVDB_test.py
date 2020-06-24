@@ -210,25 +210,25 @@ def sim(beta,mu):
         return(alpha)
 
 
-def sim_run(tsim,max_mov,rem_mov,qp,tci=0,dtc = 300,movfunct = 'once'):    
-    alpha = alphafunct(max_mov,rem_mov,qp,tci,dtc,movfunct)
-    
-    case=SD.SEIRHUDV(alpha,Htot,Vtot,gw,mu,
-            S,E_as,E_sy,
-            I_as,I_mi,I_se,I_cr,
-            H_in,H_cr,H_out,V,D,B,R,CV,CH,ACH,ACV,
-            beta,betaD,eta,pSas,tSas,pSsy,tSsy,
-            pasas,tasas,psymi,tsymi,psyse,tsyse,psycr,tsycr,
-            pasR,tasR,pmiR,tmiR,psein,tsein,pseD,tseD,
-            pcrcrin,tcrcrin,pcrD,tcrD,
-            pincrin,tincrin,pinout,tinout,
-            pcrinV,tcrinV,pcrinD,tcrinD,pVout,tVout,poutR,toutR,
-            pVD,tVD,pDB,tDB)
+    def sim_run(tsim,max_mov,rem_mov,qp,tci=0,dtc = 300,movfunct = 'once'):    
+        alpha = alphafunct(max_mov,rem_mov,qp,tci,dtc,movfunct)
+        
+        case=SD.SEIRHUDV(alpha,Htot,Vtot,gw,mu,
+                S,E_as,E_sy,
+                I_as,I_mi,I_se,I_cr,
+                H_in,H_cr,H_out,V,D,B,R,CV,CH,ACH,ACV,
+                beta,betaD,eta,pSas,tSas,pSsy,tSsy,
+                pasas,tasas,psymi,tsymi,psyse,tsyse,psycr,tsycr,
+                pasR,tasR,pmiR,tmiR,psein,tsein,pseD,tseD,
+                pcrcrin,tcrcrin,pcrD,tcrD,
+                pincrin,tincrin,pinout,tinout,
+                pcrinV,tcrinV,pcrinD,tcrinD,pVout,tVout,poutR,toutR,
+                pVD,tVD,pDB,tDB)
 
-    # sol=test.integr(0,20,0.1,False)
-    case.integr_sci(0,tsim,0.1,False)
-    out=[case,max_mov,rem_mov,qp,tsim]
-    return(out)   
+        # sol=test.integr(0,20,0.1,False)
+        case.integr_sci(0,tsim,0.1,False)
+        out=[case,max_mov,rem_mov,qp,tsim]
+        return(out)   
 
 
     tsim = 500
@@ -323,8 +323,8 @@ Iac15M = 29276
 #-------------------------------- #
 
 # Poblacion total
-T=sims[i][0].S+sims[i][0].E_as+sims[i][0].E_sy+sims[i][0].I_as+sims[i][0].I_cr+sims[i][0].I_mi+sims[i][0].I_se\
-    +sims[i][0].H_in+sims[i][0].H_out+sims[i][0].H_cr+sims[i][0].V+sims[i][0].D+sims[i][0].R+sims[i][0].B
+T=[sims[i][0].S+sims[i][0].E_as+sims[i][0].E_sy+sims[i][0].I_as+sims[i][0].I_cr+sims[i][0].I_mi+sims[i][0].I_se\
+    +sims[i][0].H_in+sims[i][0].H_out+sims[i][0].H_cr+sims[i][0].V+sims[i][0].D+sims[i][0].R+sims[i][0].B for i in range(len(input))]
 
 
 # Susceptibles
@@ -551,7 +551,7 @@ datessim = list(range(15,15+len(datestxt)+14))
 
 Ir_hoy = Ir[32:40]
 d15M = len(Ir[32:40])
-I_hoy = I_act[i][idx[i][0:(d15M+14)]] + Ir_hoy[32] - I_act[i][0]
+I_hoy = I_act[i][idx[i][0:(len(datestxt)+14)]] + Ir_hoy[32] - I_act[i][0]
 err = LA.norm(Ir_hoy-I_hoy[0:len(Ir_hoy)])/LA.norm(Ir_hoy)
 
 plt.plot(datessim,I_hoy,label='Activos Simulados')

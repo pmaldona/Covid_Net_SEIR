@@ -39,7 +39,7 @@ class simSEIRHVD:
             [500,0.4,0.4,0,0,500,0]])            
 
 
-    def __init__(self,beta = 0.19, mu =2.6,inputarray = definputarray,B=221,D=26,V=758,I_act0=12642,cId0=2234,R=0,Hc0=1980,H_incr=34,H_incr2=0,H_incr3=0,Vc0=1029,V_incr=17,V_incr2=0,V_incr3=0,H_cr=80,H0=1720,tsat=30,Hmax=4000,Vmax=2000):
+    def __init__(self,beta = 0.19, mu =2.6,inputarray = definputarray,B=221,D=26,V=758,I_act0=12642,cId0=2234,R=0,Hc0=1980,H_incr=34,H_incr2=0,H_incr3=0,Vc0=1029,V_incr=17,V_incr2=0,V_incr3=0,H_cr=80,H0=1720,tsat=30,Hmax=4000,Vmax=2000,expinfection=0,SeroPrevFactor=1):
         self.mu = mu
         self.beta = beta 
         self.sims = []
@@ -63,7 +63,9 @@ class simSEIRHVD:
         self.H0 = H0 # Hospitalizados totales dia 0
         self.tsat = tsat
         self.Hmax = Hmax
-        self.Vmax = Vmax        
+        self.Vmax = Vmax
+        self.expinfection = expinfection 
+        self.SeroPrevFactor=SeroPrevFactor
     
     def sim_run(self,tsim,max_mov,rem_mov,qp,iqt=0,fqt = 300,movfunct = 0):       
         case = SEIRHUDV(tsim,max_mov,rem_mov,qp,iqt,fqt,movfunct)
@@ -87,9 +89,12 @@ class simSEIRHVD:
         case.H0 = self.H0  # Hospitalizados totales dia 0
         case.tsat = self.tsat
         case.Hmax = self.Hmax
-        case.Vmax = self.Vmax             
+        case.Vmax = self.Vmax
+        case.expinfection = self.expinfection
+        case.SeroPrevFactor = self.SeroPrevFactor 
         case.setrelationalvalues()        
-        case.integr_sci(0,tsim,0.1,False)
+        case.integr_sci(0,tsim,0.1,False)        
+        #case.integr(0,tsim,0.1,False)
         out=[case,max_mov,rem_mov,qp,tsim]
         return(out)   
 
@@ -117,10 +122,10 @@ class simSEIRHVD:
 
 class SEIRHUDV :  
     def __init__(self,tsim,max_mov,rem_mov,qp,iqt,fqt,movfunct):
-        print(max_mov)
+        #print(max_mov)
         self.setparams()
         self.setinitvalues()  
-        print(max_mov)
+        #print(max_mov)
         self.setscenario(tsim,max_mov,rem_mov,qp,iqt,fqt,movfunct)        
         #global mobility reduction parameters
         #self.alpha=alpha
@@ -135,14 +140,14 @@ class SEIRHUDV :
         
         # Susceptibles
         # dS/dt:
-        self.dS=lambda t,S,E_as,E_sy,I_as,I_mi,D,R: -self.alpha(t)*self.beta*S*(I_as+I_mi)/self.N-self.betaD*D+self.eta*R
+        self.dS=lambda t,S,E_as,E_sy,I_as,I_mi,D,R: -self.alpha(t)*self.beta*S*(self.expinfection*(E_as+E_sy)+I_as+I_mi)/self.N-self.betaD*D+self.eta*R
         
         # Exposed
         # dE_as/dt
-        self.dE_as=lambda t,S,E_as,E_sy,I_as,I_mi: self.pSas/self.tSas*self.alpha(t)*self.beta*S*(I_as+I_mi)/self.N\
+        self.dE_as=lambda t,S,E_as,E_sy,I_as,I_mi: self.pSas/self.tSas*self.alpha(t)*self.beta*S*(self.expinfection*(E_as+E_sy)+I_as+I_mi)/self.N\
             -self.pasas/self.tasas*E_as
         # dE_sy/dt
-        self.dE_sy=lambda t,S,E_as,E_sy,I_as,I_mi: self.pSsy/self.tSsy*self.alpha(t)*self.beta*S*(I_as+I_mi)/self.N\
+        self.dE_sy=lambda t,S,E_as,E_sy,I_as,I_mi: self.pSsy/self.tSsy*self.alpha(t)*self.beta*S*(self.expinfection*(E_as+E_sy)+I_as+I_mi)/self.N\
             -self.psymi/self.tsymi*E_sy-self.psyse/self.tsyse*E_sy-self.psycr/self.tsycr*E_sy
         
         # Infected
@@ -218,17 +223,17 @@ class SEIRHUDV :
         self.psymi = 0.78 # Transicion de Expuesto Sintomatico a Infectado Mild
         self.tsymi = 5.0
 
-        self.psycr = 0.08 # Transicion de Expuesto Sintomatico a Infectado critico
+        self.psycr = 0.08 # Transicion de Expuesto Sintomatico a Infectado critico 0.05
         self.tsycr = 5.0
 
-        self.psyse = 0.14 # Transicion de Expuesto Sintomatico a Infectado Severo
+        self.psyse = 0.14 # Transicion de Expuesto Sintomatico a Infectado Severo 0.017
         self.tsyse = 5.0
 
         self.pasR = 1.0   # Transicion de Infectado asintomatico a Recuperado
-        self.tasR = 15.0 
+        self.tasR = 10.0 
 
         self.pmiR = 1.0  # Transicion de Infectado mild a Recuperado
-        self.tmiR = 20.0
+        self.tmiR = 15.0
 
         self.psein = 1.0  # Transicion de Infectado serio a Hospitalizado (si no ha colapsado Htot)
         self.tsein = 3.0 
@@ -252,7 +257,7 @@ class SEIRHUDV :
         self.tseD = 3.0
 
         self.pinout = 0.97 # Mejora de paciente severo hospitalizado, transita a Hout
-        self.tinout = 4.0
+        self.tinout = 6.0
 
         self.pVout = 0.5 # Mejora de ventilado hospitalizado, transita a Hout
         self.tVout = 15.0
@@ -261,7 +266,7 @@ class SEIRHUDV :
         self.tVD = 15.0
 
         self.poutR = 1.0 # Mejora del paciente hospitalizado, Hout a R
-        self.toutR = 10.0
+        self.toutR = 5.0
 
         self.pDB = 1.0 # Entierros
         self.tDB = 1.0 
@@ -306,12 +311,14 @@ class SEIRHUDV :
         self.CH=0
         self.ACV=0
         self.ACH=0
+        self.SeroPrevFactor = 1
         self.pop = 8125072
         self.tsat = 500
         self.Hmax = 3000
         self.Vmax = 1500
+        self.expinfection = 0
         self.setrelationalvalues()
-#, B=221,D=26,V=758,I_act0=12642,cId0=2234,R=0,Hc0=1980,Vc0=1029,H_cr=80,H0=1720):
+    #, B=221,D=26,V=758,I_act0=12642,cId0=2234,R=0,Hc0=1980,Vc0=1029,H_cr=80,H0=1720):
     def setrelationalvalues(self):
         # Infectados
         #self.cI0S = self.res*self.I_act0/2.5
@@ -323,7 +330,8 @@ class SEIRHUDV :
         self.I_as= 0.35*self.I_act0 
         self.I_mi= 0.63*self.I_act0 
         self.I_cr= 0.007*self.I_act0 
-        self.I_se = 0.013*self.I_act0        
+        self.I_se = 0.013*self.I_act0      
+          
         # Expuestos
         #self.E_as=0.3*self.muS*self.cIEx0
         #self.E_sy=0.7*self.muS*self.cIEx0
@@ -331,12 +339,13 @@ class SEIRHUDV :
         self.E_sy=0.7*self.mu*self.I_act0        
         # Hospitalizados
         #self.V+=(self.I_act0-(self.I_as+self.I_mi+self.I_cr+self.I_se))*0.05
-        self.H_in=self.H0*0.42-self.H_cr/2 #+ (self.I_act0-(self.I_as+self.I_mi+self.I_cr+self.I_se))*0.1
-        self.H_out=self.H0*0.58-self.H_cr/2 
+        self.H_in=self.H0*0.70-self.H_cr/2 #+ (self.I_act0-(self.I_as+self.I_mi+self.I_cr+self.I_se))*0.1
+        self.H_out=self.H0*0.30-self.H_cr/2 
         self.Htot=lambda t: (self.Hc0+self.H_incr*t +self.H_incr2*t**2 +self.H_incr3*t**3)*(1-expit(t-self.tsat)) + expit(t-self.tsat)*self.Hmax  # 1997.0        
         self.Vtot=lambda t: (self.Vc0+self.V_incr*t +self.V_incr2*t**2 +self.V_incr3*t**3)*(1-expit(t-self.tsat)) + expit(t-self.tsat)*self.Vmax
         # Valores globales
-        self.S=self.pop-self.H0-self.V-self.D-(self.E_as+self.E_sy)-(self.I_as+self.I_cr+self.I_se+self.I_mi)
+        self.SeroPrevPop =  self.SeroPrevFactor*self.pop
+        self.S=self.SeroPrevPop-self.H0-self.V-self.D-(self.E_as+self.E_sy)-(self.I_as+self.I_cr+self.I_se+self.I_mi)
         self.N=(self.S+self.E_as+self.E_sy+self.I_as+self.I_mi+self.I_se+self.I_cr+self.H_in+self.H_cr+self.H_out+self.V+self.D+self.R)
         self.I=self.I_cr+self.I_as+self.I_se+self.I_mi        
 
@@ -468,7 +477,7 @@ class SEIRHUDV :
             #I_seD0=self.I_seD
             #VD0=self.VD
             #H_crD0=self.H_crD
-            print(self.H_out)
+            #print(self.H_out)
             self.t=np.arange(t0,T+h,h)
             
         elif((min(self.t)<=t0) & (t0<=max(self.t))):

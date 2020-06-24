@@ -266,13 +266,13 @@ tsoch = pd.DataFrame()
 # ----------- #
 from datetime import date
 from datetime import timedelta
-base = date(2020,5,15)
-index = [(base+timedelta(days=i)).strftime("%d/%m/%Y") for i in range(47)]
-dates = list(range(15,32))  
-dates.extend(list(range(1,31)))
-dates = [str(i) for i in dates]
-days = len(dates)
-idx = [np.searchsorted(t[i],range(days+1)) for i in range(len(inputarray))]
+inicio = datetime(2020,5,15)
+fin = datetime(2020,6,30)
+tr_i = (inicio-initdate).days
+tr_f = (fin-initdate).days
+days = (fin-inicio).days
+index = [(inicio+timedelta(days=i)).strftime("%d/%m/%Y") for i in range(days+1)]
+idx = [np.searchsorted(t[i],range(tr_i,tr_f+1)) for i in range(len(inputarray))]
 
 
 # ------------------ #

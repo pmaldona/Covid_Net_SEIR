@@ -279,7 +279,7 @@ class SEIRHUDV :
         self.tDB = 1.0 
 
         self.pcrV = 1.0 # Transicion de Hospitalizado critico a Ventilado (si no ha colapsado V)
-        self.tcrV = 0.01 
+        self.tcrV = 3.0 
 
         self.eta = 0.0 # tasa de perdida de inmunidad (1/periodo)
 
@@ -337,10 +337,10 @@ class SEIRHUDV :
         #self.I_mi= 0.6*self.cI0S 
         #self.I_cr= 0.03*self.cId0 
         #self.I_se = 0.07*self.cId0
-        self.I_as= 0.35*self.I_act0 
-        self.I_mi= 0.63*self.I_act0 
-        self.I_cr= 0.007*self.I_act0 
-        self.I_se = 0.013*self.I_act0        
+        self.I_as= 0.28*self.I_act0 
+        self.I_mi= 0.665*self.I_act0 
+        self.I_cr= 0.02*self.I_act0 
+        self.I_se = 0.0335*self.I_act0        
         # Expuestos
         #self.E_as=0.3*self.muS*self.cIEx0
         #self.E_sy=0.7*self.muS*self.cIEx0
