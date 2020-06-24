@@ -13,6 +13,7 @@ from datetime import datetime
 from datetime import date
 from datetime import timedelta
 from functions_SEIRHDV import SEIRHVD_DA
+import requests
 
 """
 SEIRHVDB Class Initialization
@@ -45,5 +46,23 @@ simulation.importdata()
 simulation.escenarios()
 simulation.simulate()
 
+
+endpoint = 'http://192.168.2.248:5003/SEIRHVDsimulate'
+data = {
+'state': str(tstate),
+'beta': str(beta),
+'mu': str(mu),
+'tsim': str(tsim),
+'initdate': str(initdate),
+'ScaleFactor': str(ScaleFactor),
+'SeroPrevFactor': str(SeroPrevFactor),
+'qp': str(0),
+'min_mov': str(0.65),
+'max_mov': str(0.85),
+'movfunct': str(0),
+'qit': str(0),
+'qft': str(100)}
+
+r = requests.post(url = endpoint, data = data)
 
 # T
