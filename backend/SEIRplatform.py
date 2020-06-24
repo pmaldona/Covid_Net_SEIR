@@ -1,11 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 import sys
-sys.path.append('../SEIR_Class_beta/')
-sys.path.append('../SEIRHVDB/')
-sys.path.append('../SEIRUNI/')
-sys.path.append('../SEIRMULTI/')
-
+from pathlib import Path
+home = str(Path.home())                                                                                                                                                                                 
+sys.path.insert(1, home+'/Covid_Net_SEIR/SEIRHDV/') 
+sys.path.insert(1, home+'/Covid_Net_SEIR/SEIRHVDB/') 
+sys.path.insert(1, home+'/Covid_Net_SEIR/SEIRUNI/') 
+sys.path.insert(1, home+'/Covid_Net_SEIR/SEIRMULTI/') 
+sys.path.insert(1, home+'/Covid_Net_SEIR/SEIR_Class_beta/')
+from functions_SEIRHDV import SEIRHVD_DA
 from class_SEIR import SEIR
 from  SEIRrefiner import SEIRrefiner 
 import pandas as pd
@@ -16,8 +21,7 @@ import argparse
 from timeit import default_timer as timer
 import Single_dist_ref_SEIR as SDSEIR
 import Multi_dist_ref_SEIR as MDSEIR
-import datetime
-
+from datetime import datetime
 
 import logging
 import json
@@ -25,7 +29,12 @@ import json
 from flask import Flask
 from flask import jsonify
 from flask import request
+from flask import send_file
 from flask_cors import CORS
+
+
+import dill as pickle
+
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
@@ -476,7 +485,11 @@ def SEIR2simulate():
         response = {'status': 'OK',"error": str(e)}
         return response, 200
 
-
+'''
+# ----------------------------------------------- #
+#                  SEIRHVD                        #
+# ----------------------------------------------- #
+'''
 
 @app.route('/SEIRHVDsimulate', methods=['GET'])
 def SEIRHVDsimulate():
@@ -484,6 +497,39 @@ def SEIRHVDsimulate():
     # ----------------------------------------------- #
     #             SEIRHVD Model simulation            #
     # ----------------------------------------------- #
+    # Params needed:
+    #   - state = region por cut
+    #   - beta
+    #   - mu
+    #   - ScaleFactor
+    #   - SeroPrevFactor
+    #   - expinfection
+    #   - initdate
+    #   - tasas (no todavia)
+    #   - Objeto de cuarentena 
+    #  
+
+    tstate = '13'
+
+    # Parámetros de tiempo
+    initdate = datetime(2020,5,15)
+
+
+    # Ajuste por ventiladores
+    # Parametros del modelo
+    beta = 0.117 #0.25#0.19 0.135
+    mu = 0.6 #2.6 0.6
+    ScaleFactor = 1.9 #4.8
+    SeroPrevFactor = 0.5 # Sero Prevalence Factor. Permite ajustar la cantidad de gente que entra en la dinamica
+    expinfection = 1 # Proporcion en la que contagian los expuestos
+
+    tsim = 500
+
+    simulation = SEIRHVD_DA(beta,mu,ScaleFactor=ScaleFactor,SeroPrevFactor=SeroPrevFactor,expinfection=expinfection,initdate = initdate, tsim = tsim,tstate=tstate)
+    simulation.importdata()
+    simulation.escenarios()
+    simulation.simulate()
+
     '''
     
     # ------------------------ #
@@ -492,74 +538,68 @@ def SEIRHVDsimulate():
     try: 
         if request.form:
             print("I have form data")
-            state = str(request.form.get('state')) # Region
-            urbancenter = str(request.form.get('urbancenter')) #Comuna
-            qp = int(request.form.get('qp')) # Quarantine period
+            state = str(request.form.get('state')) # Region            
             beta = float(request.form.get('beta'))
-            Ti = int(request.form.get('Ti')) #sigma-1
-            Tr = int(request.form.get('Tr')) #gamma-1
-            r0 = float(request.form.get('r0'))    #mu 
-            mov = float(request.form.get('mov')) #Quarantine movilty
+            mu = float(request.form.get('mu')) #mu 
             tsim = int(request.form.get('tSim'))  # Simulation time
+            initdate = str(request.form.get('initdate'))  # Simulation time
+            ScaleFactor = float(request.form.get('ScaleFactor')) #Scale Factor
+            SeroPrevFactor = float(request.form.get('SeroPrevFactor')) #Sero prevalence factor
+
+            qp = int(request.form.get('qp')) # Quarantine period            
+            min_mov = float(request.form.get('min_mov')) #Quarantine remament movlity
+            max_mov = float(request.form.get('max_mov')) #Quarantine maximum movilty            
             movfunct = str(request.form.get('movfunct')) # Quarantine Type
+            qit = int(request.form.get('qit')) #Quarantine initial time
+            qft = int(request.form.get('qit')) #Quarantine initial time
 
         if request.json:
             print("I have json")        
             state = str(request.json['state'])
-            urbancenter = str(request.json['urbancenter'])
-            qp = int(request.json['qp'])
             beta = float(request.json['beta'])
-            Ti = int(request.json['Ti']) #sigma-1
-            Tr = int(request.json['Tr']) #gamma-1
-            r0 = float(request.json['r0'])
-            mov = float(request.json['mov'])
+            mu = float(request.json['mu'])           
             tsim = int(request.json['tSim'])
+            initdate = str(request.json['initdate'])
+            ScaleFactor = float(request.json['ScaleFactor'])
+            SeroPrevFactor = float(request.json['SeroPrevFactor'])
+
+            qp = int(request.json['qp'])                        
+            min_mov = float(request.json['min_mov'])
+            max_mov = float(request.json['max_mov'])
             movfunct = str(request.json['movfunct'])
+            qit = int(request.json['qit'])
+            qft = int(request.json['qft'])
 
-        # Get Comunas from OD 
-        # falta identificar centros urbanos     
-        comunas = []
-        if qp ==-1:
-            qp = tsim
-
-        if Ti==0:
-            sigma = 1
-        else:
-            sigma = 1/Ti
-
-        if Tr==0:
-            gamma = 1
-        else:
-            gamma = 1/Tr    
-        tci = None
-        #params = beta sigma gamma mu
-        params = [beta,sigma,gamma,r0] 
+        params = [beta,mu,state,tsim,initdate,ScaleFactor,SeroPrevFactor]
+        initdate = datetime.strptime(initdate, "%Y/%m/%d")# pej 2020/04/03 
+        expinfection = 1
         
-        # inputs: state, centrourbano, beta, sigma, gamma, mu,qp, mov,tsim, tci, movfunct 
-        # outputs: {'S':sim.S,'E':sim.E,'I':sim.I,'R':sim.R,'tout':sim.t}
-
-        # Simulation
-        results = MDSEIR.simulate_multi(state,comunas,params,qp,mov,tsim,tci,movfunct)
+        simulation = SEIRHVD_DA(beta,mu,ScaleFactor=ScaleFactor,SeroPrevFactor=SeroPrevFactor,expinfection=expinfection,initdate = initdate, tsim = tsim,tstate=state)
+        simulation.importdata()
+        simulation.escenarios()
+        simulation.simulate()
         
-        
+        # Reduce data to send it as json
+        #poplist = ['inputarray','Hcmodel','Vcmodel','initdate','Br','Br_dates', 'Br_tr', 'ED_RM_df','ED_RM', 'ED_RM_dates', 'ED_RM_ac', 'ED_tr', 'Ir', 'Ir_dates', 'tr', 'Hr', 'Vr', 'Vr_tot', 'Hr_tot', 'sochimi_dates', 'sochimi_tr']
+        #
+        #for key in simulation.__dict__: 
+        #    if 'pandas' in str(type(simulation.__dict__[key])): 
+        #        print(type(simulation.__dict__[key])) 
+        #        print(key) 
+        #        poplist.append(key) 
+        #for i in poplist:
+        #    simulation.__dict__.pop(i)
+#
+        #simulation.initdate = simulation.initdate.strftime('%Y/%m/%d')      
         # Extract Results
-        S = results['S'].tolist()
-        E = results['E'].tolist()
-        I = results['I'].tolist()
-        R = results['R'].tolist()
-        t = list(results['tout'])
 
-        # Round results:
-        S = [round(i) for i in S]
-        E = [round(i) for i in E]
-        I = [round(i) for i in I]
-        R = [round(i) for i in R]
-                
-        init_date = results['init_date']
 
+
+        a = pickle.dumps(vars(simulation))  
         # Send results
-        response = {'status': 'OK','S':S,'E':E,'I':I,'R':R,'t':t,'init_date':init_date,'I_peak':max(I),'R_total':(max(R))}
-        return jsonify(response), 200
+        #response = {'status': 'OK','S':S,'E':E,'I':I,'R':R,'t':t,'init_date':init_date,'I_peak':max(I),'R_total':(max(R))}
+        #return jsonify(response), 200
+        return send_file(a), 200
 
     # Solve
     #integr(self,t0,T,h,E0init=False)
