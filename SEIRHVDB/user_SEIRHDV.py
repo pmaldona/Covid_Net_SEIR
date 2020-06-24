@@ -10,10 +10,8 @@ from numpy import linalg as LA
 import json
 import requests
 from datetime import datetime
-from datetime import date
 from datetime import timedelta
-from functions_SEIRHDV import SEIRHVD_DA
-import requests
+from remote_SEIRHDV import SEIRHVD_DA
 
 """
 SEIRHVDB Class Initialization
@@ -41,19 +39,30 @@ expinfection = 1 # Proporcion en la que contagian los expuestos
 
 tsim = 500
 
+
+
+
 simulation = SEIRHVD_DA(beta,mu,ScaleFactor=ScaleFactor,SeroPrevFactor=SeroPrevFactor,expinfection=expinfection,initdate = initdate, tsim = tsim,tstate=tstate)
-simulation.importdata()
-simulation.escenarios()
+simulation.defaultescenarios()
+
+#   Creacion de escenarios
+# [tsim,max_mov,rem_mov,qp,iqt,fqt,movfunct]
+simulation.inputarray = [[500.0, 0.85, 0.6, 0.0, 0.0, 500.0, 0.0],
+ [500.0, 0.85, 0.65, 0.0, 0.0, 500.0, 0.0],
+ [500.0, 0.85, 0.7, 0.0, 0.0, 500.0, 0.0]]
+simulation.addscenario()
 simulation.simulate()
 
 
+
 endpoint = 'http://192.168.2.248:5003/SEIRHVDsimulate'
+
 data = {
 'state': str(tstate),
 'beta': str(beta),
 'mu': str(mu),
 'tsim': str(tsim),
-'initdate': str(initdate),
+'initdate': initdate.strftime('%Y/%m/%d'),
 'ScaleFactor': str(ScaleFactor),
 'SeroPrevFactor': str(SeroPrevFactor),
 'qp': str(0),
@@ -63,6 +72,20 @@ data = {
 'qit': str(0),
 'qft': str(100)}
 
+data = {
+'state': str(tstate),
+'beta': str(beta),
+'mu': str(mu),
+'tsim': str(tsim),
+'initdate': initdate.strftime('%Y/%m/%d'),
+'ScaleFactor': str(ScaleFactor),
+'SeroPrevFactor': str(SeroPrevFactor),
+'inputarray': str(inputarray)}
+
+
 r = requests.post(url = endpoint, data = data)
 
-# T
+sims = pickle.loads(r.content)
+
+for key in sims: 
+    print(key)

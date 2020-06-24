@@ -3,8 +3,7 @@
 """
 SEIRHVDB Class Initialization
 """
-import class_SEIRHUVD2 as SD2
-#import SEIRHVD
+
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -17,6 +16,10 @@ from datetime import timedelta
 import dill as pickle
 
 """
+SEIRHDV Remote Simulation
+Este codigo simula el modelo SEIRHDV en el cluster del Dlab. 
+Para que funcione se debe estar conectado al VPN
+
 To Do:
     - Permitir ejecución remota desde el cluster:
         1. Crear funciones en el backend que llamen a las funciones del simulador. Deben pasar:        
@@ -30,19 +33,18 @@ To Do:
         - Funcion de grafico de cuarentenas
         - Cambiar nombre de inputarray
     - Habilitar el uso del código para otras regiones
-    - Extender importación de datos Sochimi a otras regiones y otras unidades territoriales según corresponda
-     - Arreglar el ingreso del modelo de ingreso de capacidad total de camas para que sea una funcion
-     - Resolver como se haría el ploteo para varios escenarios
-     - Generar automaticamente nombres de columnas en las tablas
-
-     - Generar Vector de estilos
-     - Agregar comparacion fallecidos diarios vs reales
-     - Agregar opción de trabajar con comunas
+        - Extender importación de datos Sochimi a otras regiones y otras unidades territoriales según corresponda
+    - Arreglar el ingreso del modelo de ingreso de capacidad total de camas para que sea una funcion
+    - Resolver como se haría el ploteo para varios escenarios
+    - Generar automaticamente nombres de columnas en las tablas
+    - Generar Vector de estilos
+    - Agregar comparacion fallecidos diarios vs reales
+    - Agregar opción de trabajar con comunas
      - reducir parametros enviados al inicio a los necesarios 
      - Enviar la funcion de aproximacion de camas y ventiladores en vez de los parametros
      - Agregar opción de qué seirhudv usar (2 o 3)
 
-     - Terminar funcion de remote simulatew
+     - Terminar funcion de remote simulate
      - Ordenar funcion de estimacion de uso y capacidad de camas y ventiladores
       
 """
@@ -102,92 +104,24 @@ class SEIRHVD_DA:
     #    Simulate    #
     # -------------- #
 
-    def simulate(self):                   
-        dead = 'minsal'
-        # Valores iniciales
-        if dead=='minsal':        
-            self.B = self.Br[0]  # Muertos acumulados al dia de inicio
-            self.D = self.Br[1]-self.Br[0]  # Muertos en el dia de inicio
-        elif dead == 'exceso':
-            self.B = self.ED_RM_ac[0]
-            self.D = self.ED_RM_ac[1] - self.ED_RM_ac[0]
-
-
-        I_act0 = self.ScaleFactor*self.Ir[0]  # Infectados Activos al dia de inicio
-        cId0 = self.ScaleFactor*(self.Ir[1]-self.Ir[0])# cId0 # I Nuevos dia 0
-        self.R  = 0   # Recuperados al dia de inicio
-
-
-        # Dinámica del aumento de camas
-        self.V = self.Vr[0]   # Ventilados al dia de inicio
-        H_cr = 0#Vr[0]*0.01 # Hospitalizados criticos dia 0
-        H0 = self.Hr[0] # Hospitalizados totales dia 0
-
-        bedmodelorder = 2
-        self.Hcmodel = np.poly1d(np.polyfit(self.sochimi_tr, self.Hr_tot, bedmodelorder)) 
-        self.Vcmodel = np.poly1d(np.polyfit(self.sochimi_tr, self.Vr_tot, bedmodelorder)) 
-        Hc0=self.Hcmodel[0]#1980
-        H_incr=self.Hcmodel[1]
-        H_incr2 = self.Hcmodel[2]
-        H_incr3 = self.Hcmodel[3]
-        Vc0=self.Vcmodel[0]#1029
-        V_incr = self.Vcmodel[1]
-        V_incr2 = self.Vcmodel[2]
-        V_incr3 = self.Vcmodel[3] 
-        Vmax = 1500# Vcmodel(tsat)
-        vents = [self.Vcmodel(t) for t in range(self.tsim)]  
-        tsat = int(np.where(np.array(vents)>=1500)[0][0])
-        Hmax = self.Hcmodel(tsat)
-                        
-        model = SD2.simSEIRHVD(beta = self.beta, mu = self.mu, inputarray= self.inputarray, B=self.B,D=self.D,V=self.V,I_act0=I_act0,cId0=cId0,R=self.R,Hc0=Hc0,H_incr=H_incr,H_incr2=H_incr2,H_incr3=H_incr3,Vc0=Vc0,V_incr=V_incr,V_incr2=V_incr2,V_incr3=V_incr3,H_cr=H_cr,H0=H0,tsat=tsat,Hmax=Hmax,Vmax=Vmax, expinfection=self.expinfection, SeroPrevFactor= self.SeroPrevFactor)
-        self.sims = model.simulate()
-        self.auxvar()
-        return
-
-    def simulate_remote(self):
+    def simulate(self):
         endpoint = 'http://192.168.2.248:5003/SEIRHVDsimulate'
-        #auxinputarray = [list(self.inputarray[i]) for i in range(self.numescenarios)]
+        auxinputarray = [list(self.inputarray[i]) for i in range(self.numescenarios)]
         data = {
         'state': str(self.tstate),
         'beta': str(self.beta),
         'mu': str(self.mu),        
+        'tsim': str(self.tsim),
         'initdate': self.initdate.strftime('%Y/%m/%d'),
         'ScaleFactor': str(self.ScaleFactor),
         'SeroPrevFactor': str(self.SeroPrevFactor),
-        'inputarray': str(inputarray)}
-        #,
-        #'tsim': str(self.inputarray[0]),
-        #'qp': str(self.inputarray[3]),
-        #'min_mov': str(self.inputarray[2]),
-        #'max_mov': str(self.inputarray[1]),
-        #'movfunct': str(self.inputarray[0]),
-        #'qit': str(0),
-        #'qft': str(100)}
+        'inputarray': str(auxinputarray)}        
+       
+        
+        self.r = requests.post(url = endpoint, data = data)
 
-        r = requests.post(url = endpoint, data = data)
-
-        self.sims = pickle.loads(r.content)                    
-
-
-        bedmodelorder = 2
-        self.Hcmodel = np.poly1d(np.polyfit(self.sochimi_tr, self.Hr_tot, bedmodelorder)) 
-        self.Vcmodel = np.poly1d(np.polyfit(self.sochimi_tr, self.Vr_tot, bedmodelorder)) 
-        Hc0=self.Hcmodel[0]#1980
-        H_incr=self.Hcmodel[1]
-        H_incr2 = self.Hcmodel[2]
-        H_incr3 = self.Hcmodel[3]
-        Vc0=self.Vcmodel[0]#1029
-        V_incr = self.Vcmodel[1]
-        V_incr2 = self.Vcmodel[2]
-        V_incr3 = self.Vcmodel[3] 
-        Vmax = 1500# Vcmodel(tsat)
-        vents = [self.Vcmodel(t) for t in range(self.tsim)]  
-        tsat = int(np.where(np.array(vents)>=1500)[0][0])
-        Hmax = self.Hcmodel(tsat)
-                        
-        #model = SD2.simSEIRHVD(beta = self.beta, mu = self.mu, inputarray= self.inputarray, B=self.B,D=self.D,V=self.V,I_act0=I_act0,cId0=cId0,R=self.R,Hc0=Hc0,H_incr=H_incr,H_incr2=H_incr2,H_incr3=H_incr3,Vc0=Vc0,V_incr=V_incr,V_incr2=V_incr2,V_incr3=V_incr3,H_cr=H_cr,H0=H0,tsat=tsat,Hmax=Hmax,Vmax=Vmax, expinfection=self.expinfection, SeroPrevFactor= self.SeroPrevFactor)
-        self.sims = model.simulate()
-        self.auxvar()
+        #self.sims = pickle.loads(r.content)                 
+        #self.auxvar()      
         return
 
     # ------------------------------- #
@@ -289,7 +223,7 @@ class SEIRHVD_DA:
     def importdata(self):
         print('Importando Datos')
         self.importfallecidosacumuados()
-        self.importfallecidosexcesivos()
+        #self.importfallecidosexcesivos()
         self.importinfectadosactivos()
         self.importsochimi()
         print('Done')
