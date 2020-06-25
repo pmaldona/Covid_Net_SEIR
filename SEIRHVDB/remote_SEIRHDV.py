@@ -77,6 +77,14 @@ class SEIRHVD_DA:
     #      Creación de Funciones      #
     # ------------------------------- #
     """
+    # UCI and UTI beds saturation function
+    def h_sat(self,H_in,H_cr,H_out,t):
+        return(expit(-self.gw*(H_in+H_cr+H_out-self.Htot(t))))
+    # Ventilators Saturation Function    
+    def v_sat(self,V,t):
+        return(expit(-self.gw*(V-self.Vtot(t))))
+
+
 
     #------------------------------------------------- #
     #              Definir Escenarios                  #
@@ -88,6 +96,8 @@ class SEIRHVD_DA:
                 [self.tsim,0.85,0.65,0,self.May15,500,0],
                 [self.tsim,0.85,0.7,0,self.May15,500,0]])        
         self.numescenarios = len(self.inputarray)
+
+
 
     def addscenario(self,tsim=None,max_mov=None,rem_mov=None,qp=None,iqt=None,fqt=None,movfunct=None):        
         if tsim:
@@ -118,10 +128,10 @@ class SEIRHVD_DA:
         'inputarray': str(auxinputarray)}        
        
         
-        self.r = requests.post(url = endpoint, data = data)
-
-        #self.sims = pickle.loads(r.content)                 
-        #self.auxvar()      
+        r = requests.post(url = endpoint, data = data)
+        self.sims = pickle.loads(r.content)
+        self.importdata()                 
+        self.auxvar()      
         return
 
     # ------------------------------- #
@@ -164,7 +174,8 @@ class SEIRHVD_DA:
         endpoint = endpoint+self.tstate
         r = requests.get(endpoint) 
         mydict = r.json()
-        sochimi=pd.DataFrame(mydict)
+        self.sochimi=pd.DataFrame(mydict)
+        sochimi = self.sochimi
         self.Hr = sochimi['camas_ocupadas']
         self.Vr =  sochimi['vmi_ocupados']
         self.Vr_tot =  sochimi['vmi_totales']
@@ -185,7 +196,9 @@ class SEIRHVD_DA:
     #    Datos Fallecidos acumulados   #
     # -------------------------------- #
     def importfallecidosacumuados(self,endpoint = 'https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/output/producto14/FallecidosCumulativo.csv' ):     
-        self.Br = pd.read_csv(endpoint).iloc[6][1:] 
+        cut =  ['15','01','02','03','04','05','13','06','07','16','08','09','14','10','11','12','00']
+        index = cut.index(self.tstate)
+        self.Br = pd.read_csv(endpoint).iloc[index][1:] 
         self.Br_dates = [datetime.strptime(self.Br.index[i],'%Y-%m-%d') for i in range(len(self.Br))]
         index = np.where(np.array(self.Br_dates) >= self.initdate)[0][0] 
         self.Br = self.Br[index:]
@@ -202,7 +215,7 @@ class SEIRHVD_DA:
         #path = '/home/samuel/Documents/Dlab/data/Excess_dead_daily.csv'
         
         excess_dead = pd.read_csv(path)
-        self.ED_RM_df = excess_dead.loc[excess_dead['Codigo region']==13]      
+        self.ED_RM_df = excess_dead.loc[excess_dead['Codigo region']==int(self.tstate)]      
         self.ED_RM = [self.ED_RM_df['Defunciones Covid'].iloc[i] + self.ED_RM_df['Exceso de muertes media poderada'].iloc[i] for i in range(len(self.ED_RM_df))]       
 
         self.ED_RM_dates = [datetime.strptime(self.ED_RM_df['Fecha'].iloc[i], '%Y-%m-%d')  for i in range(len(self.ED_RM_df))]

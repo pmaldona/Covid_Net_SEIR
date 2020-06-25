@@ -3,6 +3,7 @@
 """
 SEIRHVDB Class Initialization
 """
+import class_SEIRHUVD3 as SD3
 import class_SEIRHUVD2 as SD2
 #import SEIRHVD
 import numpy as np
@@ -44,7 +45,10 @@ To Do:
 
      - Terminar funcion de remote simulatew
      - Ordenar funcion de estimacion de uso y capacidad de camas y ventiladores
-      
+     - Homologar las funciones actuaizadas en remote y local SEIRHDV
+     - Mirar convertir en arregplo el inputarray
+     - Falta la función de camas en el remote
+
 """
 
 
@@ -102,7 +106,7 @@ class SEIRHVD_DA:
     #    Simulate    #
     # -------------- #
 
-    def simulate(self):                   
+    def simulate(self,v=2):                   
         dead = 'minsal'
         # Valores iniciales
         if dead=='minsal':        
@@ -134,12 +138,20 @@ class SEIRHVD_DA:
         V_incr = self.Vcmodel[1]
         V_incr2 = self.Vcmodel[2]
         V_incr3 = self.Vcmodel[3] 
-        Vmax = 1500# Vcmodel(tsat)
-        vents = [self.Vcmodel(t) for t in range(self.tsim)]  
-        tsat = int(np.where(np.array(vents)>=1500)[0][0])
-        Hmax = self.Hcmodel(tsat)
-                        
-        model = SD2.simSEIRHVD(beta = self.beta, mu = self.mu, inputarray= self.inputarray, B=self.B,D=self.D,V=self.V,I_act0=I_act0,cId0=cId0,R=self.R,Hc0=Hc0,H_incr=H_incr,H_incr2=H_incr2,H_incr3=H_incr3,Vc0=Vc0,V_incr=V_incr,V_incr2=V_incr2,V_incr3=V_incr3,H_cr=H_cr,H0=H0,tsat=tsat,Hmax=Hmax,Vmax=Vmax, expinfection=self.expinfection, SeroPrevFactor= self.SeroPrevFactor)
+        Vmax = np.mean(self.Vr_tot[-7:])*1.01# 1500 Vcmodel(tsat)
+        vents = [self.Vcmodel(t) for t in range(self.tsim)]          
+        Hmax = np.mean(self.Hr_tot[-7:])*1.01# self.Hcmodel(tsat)
+
+        try:
+            tsat = int(np.where(np.array(vents)>=Vmax)[0][0])
+        except:
+            tsat = self.sochimi_tr[-1]+7
+        if v==2:
+            model = SD2.simSEIRHVD(beta = self.beta, mu = self.mu, inputarray= self.inputarray, B=self.B,D=self.D,V=self.V,I_act0=I_act0,cId0=cId0,R=self.R,Hc0=Hc0,H_incr=H_incr,H_incr2=H_incr2,H_incr3=H_incr3,Vc0=Vc0,V_incr=V_incr,V_incr2=V_incr2,V_incr3=V_incr3,H_cr=H_cr,H0=H0,tsat=tsat,Hmax=Hmax,Vmax=Vmax, expinfection=self.expinfection, SeroPrevFactor= self.SeroPrevFactor)
+        elif v==3:
+            model = SD3.simSEIRHVD(beta = self.beta, mu = self.mu, inputarray= self.inputarray, B=self.B,D=self.D,V=self.V,I_act0=I_act0,cId0=cId0,R=self.R,Hc0=Hc0,H_incr=H_incr,H_incr2=H_incr2,H_incr3=H_incr3,Vc0=Vc0,V_incr=V_incr,V_incr2=V_incr2,V_incr3=V_incr3,H_cr=H_cr,H0=H0,tsat=tsat,Hmax=Hmax,Vmax=Vmax, expinfection=self.expinfection, SeroPrevFactor= self.SeroPrevFactor)    
+        else:
+            raise('Version Error')
         self.sims = model.simulate()
         self.auxvar()
         return
@@ -230,7 +242,8 @@ class SEIRHVD_DA:
         endpoint = endpoint+self.tstate
         r = requests.get(endpoint) 
         mydict = r.json()
-        sochimi=pd.DataFrame(mydict)
+        self.sochimi=pd.DataFrame(mydict)
+        sochimi = self.sochimi
         self.Hr = sochimi['camas_ocupadas']
         self.Vr =  sochimi['vmi_ocupados']
         self.Vr_tot =  sochimi['vmi_totales']
@@ -251,7 +264,9 @@ class SEIRHVD_DA:
     #    Datos Fallecidos acumulados   #
     # -------------------------------- #
     def importfallecidosacumuados(self,endpoint = 'https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/output/producto14/FallecidosCumulativo.csv' ):     
-        self.Br = pd.read_csv(endpoint).iloc[6][1:] 
+        cut =  ['15','01','02','03','04','05','13','06','07','16','08','09','14','10','11','12','00']
+        index = cut.index(self.tstate)
+        self.Br = pd.read_csv(endpoint).iloc[index][1:] 
         self.Br_dates = [datetime.strptime(self.Br.index[i],'%Y-%m-%d') for i in range(len(self.Br))]
         index = np.where(np.array(self.Br_dates) >= self.initdate)[0][0] 
         self.Br = self.Br[index:]
@@ -268,7 +283,7 @@ class SEIRHVD_DA:
         #path = '/home/samuel/Documents/Dlab/data/Excess_dead_daily.csv'
         
         excess_dead = pd.read_csv(path)
-        self.ED_RM_df = excess_dead.loc[excess_dead['Codigo region']==13]      
+        self.ED_RM_df = excess_dead.loc[excess_dead['Codigo region']==int(self.tstate)]      
         self.ED_RM = [self.ED_RM_df['Defunciones Covid'].iloc[i] + self.ED_RM_df['Exceso de muertes media poderada'].iloc[i] for i in range(len(self.ED_RM_df))]       
 
         self.ED_RM_dates = [datetime.strptime(self.ED_RM_df['Fecha'].iloc[i], '%Y-%m-%d')  for i in range(len(self.ED_RM_df))]
@@ -398,8 +413,14 @@ class SEIRHVD_DA:
         # -------------------- #
         #   Fecha de Colapso   #
         # -------------------- #
-        self.H_colapsedate = [np.where(self.CH[i]>0)[0][0] for i in range(self.numescenarios)]
-        self.V_colapsedate = [np.where(self.CV[i]>0)[0][0] for i in range(self.numescenarios)]
+        try:
+            self.H_colapsedate = [np.where(self.CH[i]>0)[0][0] for i in range(self.numescenarios)]
+        except:
+            self.H_colapsedate = [self.tsim for i in range(self.numescenarios)]
+        try:
+            self.V_colapsedate = [np.where(self.CV[i]>0)[0][0] for i in range(self.numescenarios)]
+        except:
+            self.V_colapsedate = [self.tsim for i in range(self.numescenarios)]
 
 
 
@@ -480,8 +501,9 @@ class SEIRHVD_DA:
         Vtot = [self.sims[0][0].Vtot(i) for i in self.t[0][:endD[0]]]    
         plt.plot(self.t[0][:endD[0]],Vtot,color='lime')
 
+        linestyle = ['dashed','solid','dashed','dotted']
         for i in range(self.numescenarios):            
-            plt.plot(self.t[i][:endD[i]],self.V[i][:endD[i]],label='VMI Utilizados mov='+str(self.inputarray[i][2]),color = 'blue' ,linestyle = 'dashed')
+            plt.plot(self.t[i][:endD[i]],self.V[i][:endD[i]],label='VMI Utilizados mov='+str(self.inputarray[i][2]),color = 'blue' ,linestyle = linestyle[i])
     
 
         plt.xlim(0,days)
@@ -596,7 +618,7 @@ class SEIRHVD_DA:
         #fig.suptitle(title)
         
         
-        colors = ['red','blue','green']
+        colors = ['red','blue','green','lime']
         
         
         for i in range(self.numescenarios):
@@ -641,7 +663,7 @@ class SEIRHVD_DA:
         plt.plot([], [], ' ', label='Fecha colapso Camas: '+str(round(self.t[i][self.H_colapsedate[i]])))
         plt.plot([], [], ' ', label='Fecha colapso Ventiladores: '+str(round(self.t[i][self.V_colapsedate[i]])))
 
-        linestyle = ['dashed','solid','dotted']
+        linestyle = ['dashed','solid','dashed','dotted']
         for i in range(self.numescenarios):
             plt.plot(self.t[i][:endD[i]],self.CH[i][:endD[i]],label='Intermedio/Intensivo Mov = '+str(self.inputarray[i][1]),color = 'red' ,linestyle = linestyle[i])
             plt.plot(self.t[i][:endD[i]],self.CV[i][:endD[i]],label='VMI Mov = '+str(self.inputarray[i][1]),color = 'blue' ,linestyle = linestyle[i])
@@ -675,7 +697,7 @@ class SEIRHVD_DA:
         plt.scatter(self.sochimi_tr,self.Hr_tot,label='Capacidad de Camas')
         plt.scatter(self.sochimi_tr,self.Vr_tot,label='Capacidad de Ventiladores')
 
-        linestyle = ['dashed','solid','dotted']
+        linestyle = ['dashed','solid','dashed','dotted']
         for i in range(self.numescenarios):    
             plt.plot(self.t[i][:endD[i]],np.array(self.CH[i][:endD[i]])+np.array(self.H_sum[i][:endD[i]]),label='UCI/UTI Mov = '+str(self.inputarray[i][1]),color = 'red' ,linestyle = linestyle[i])
             plt.plot(self.t[i][:endD[i]],np.array(self.CV[i][:endD[i]])+np.array(self.V[i][:endD[i]]),label='VMI Mov = '+str(self.inputarray[i][1]),color = 'blue' ,linestyle = linestyle[i])
@@ -691,7 +713,7 @@ class SEIRHVD_DA:
     # ------------------------------ #
     #       Infectados Activos       #
     # ------------------------------ #
-    def plotactivos(self,enddate =  datetime(2020,7,30), days = 0,reales= True,scalefactor = False):
+    def plotactivos(self,enddate =  datetime(2020,7,30),days=0, reales= True,ylim = 0,norm=1,scalefactor = False):
         # -------- #
         #   Time   #
         # -------- #
@@ -719,18 +741,21 @@ class SEIRHVD_DA:
             plt.scatter(self.tr,self.Ir,label='Infectados Activos reales')
 
         # Infectados
+        linestyle = ['dashed','solid','dashed','dotted']
         for i in range(self.numescenarios):        
-            plt.plot(self.t[i],self.I[i]/Isf,label='Infectados Mov = '+str(self.inputarray[i][2]))
+            plt.plot(self.t[i],self.I[i]/Isf,label='Infectados Mov = '+str(self.inputarray[i][2]),linestyle=linestyle[i])
 
         if days >0:
             plt.xlim(0,days)
+        if ylim >0:
+            plt.ylim(0,ylim)            
         self.plot(title = 'Activos',xlabel='Dias desde '+datetime.strftime(self.initdate,'%Y-%m-%d'))
 
     # -------------------------------- #
     #       Infectados Acumulados      #
     # -------------------------------- #
     # No esta listo
-    def plotacumulados(self,enddate =  datetime(2020,7,30), days = 0,reales= True,scalefactor = False):
+    def plotacumulados(self,enddate =  datetime(2020,7,30),days=0, reales= True,ylim = 0,norm=1,scalefactor = False):
         # -------- #
         #   Time   #
         # -------- #
@@ -761,7 +786,7 @@ class SEIRHVD_DA:
         self.plot(title = 'Activos',xlabel='Dias desde '+datetime.strftime(self.initdate,'%Y-%m-%d'))  
 
 
-    def plotactivosdesagregados(self,enddate =  datetime(2020,7,30), days = 0,reales= True,scalefactor = False):
+    def plotactivosdesagregados(self,enddate =  datetime(2020,7,30),days=0, reales= True,ylim = 0,norm=1,scalefactor = False):
         # -------- #
         #   Time   #
         # -------- #
@@ -793,6 +818,8 @@ class SEIRHVD_DA:
 
         if days >0:
             plt.xlim(0,days)
+        if ylim >0:
+            plt.ylim(0,ylim)
         self.plot(title = 'Infectados Activos desagregados',xlabel='Dias desde '+datetime.strftime(self.initdate,'%Y-%m-%d'))
 
 
@@ -850,7 +877,7 @@ class SEIRHVD_DA:
             plt.scatter(self.Br_tr,self.Br,label='Fallecidos reales')
             plt.scatter(self.ED_tr,self.ED_RM_ac,label='Fallecidos excesivos proyectados')
 
-        linestyle = ['dashed','solid','dashed']
+        linestyle = ['dashed','solid','dashed','dotted']
         for i in range(self.numescenarios):
             plt.plot(self.t[i][:endD[i]],self.B[i][:endD[i]]/norm,label='Fallecidos Mov = '+str(self.inputarray[i][2]),color = 'blue',linestyle=linestyle[i])
 
@@ -880,7 +907,7 @@ class SEIRHVD_DA:
         if scalefactor:
             Isf = self.ScaleFactor
 
-        linestyle = ['dashed','solid','dotted']
+        linestyle = ['dashed','solid','dashed','dotted']
         for i in range(self.numescenarios):
             plt.plot(self.t[i],self.D[i]/Isf,label='Mov = '+str(self.inputarray[i][2]),color = 'black' ,linestyle = linestyle[i])
         self.plot(title = 'Fallecidos diarios',xlabel='Dias desde '+datetime.strftime(self.initdate,'%Y-%m-%d'))
@@ -937,7 +964,7 @@ class SEIRHVD_DA:
         #    plt.scatter(Br_tr,Br,label='Fallecidos reales')
         #    plt.scatter(self.ED_tr,self.ED_RM_ac,label='Fallecidos excesivos proyectados')
 
-        linestyle = ['dashed','solid','dashed']
+        linestyle = ['dashed','solid','dashed','dotted']
         for i in range(self.numescenarios):
             plt.plot(self.t[i],100*self.B[i]/self.Iac[i],label='Mov=['+str(self.inputarray[i][2])+','+str(self.inputarray[i][1])+']' ,color='blue',linestyle=linestyle[i])
             
@@ -984,7 +1011,7 @@ class SEIRHVD_DA:
             plt.plot([], [], ' ', label='Mov='+str(self.inputarray[i][2])+'Peak='+self.peak_date[i].strftime('%Y-%m-%d'))
         
 
-        linestyle = ['dashed','solid','dashed']
+        linestyle = ['dashed','solid','dashed','dotted']
         for i in range(self.numescenarios):
             plt.plot(self.t[i][:endD[i]],self.E[i][:endD[i]],label='Expuestos Mov = '+str(self.inputarray[i][2]),color = 'blue',linestyle=linestyle[i])
             plt.plot(self.t[i][:endD[i]],self.E_sy[i][:endD[i]],label='Expuestos sintomáticos Mov = '+str(self.inputarray[i][2]),color = 'red',linestyle=linestyle[i])
@@ -1030,7 +1057,7 @@ class SEIRHVD_DA:
             plt.plot([], [], ' ', label='Mov='+str(self.inputarray[i][2])+'Peak='+self.peak_date[i].strftime('%Y-%m-%d'))
         
 
-        linestyle = ['dashed','solid','dashed']
+        linestyle = ['dashed','solid','dashed','dotted']
         for i in range(self.numescenarios):        
             plt.plot(self.t[i],self.S[i],label='Susceptibles Mov = '+str(self.inputarray[i][2]),linestyle=linestyle[i])
             plt.plot(self.t[i],self.I[i],label='Infectados Mov = '+str(self.inputarray[i][2]),linestyle=linestyle[i])        

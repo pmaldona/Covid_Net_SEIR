@@ -11,6 +11,8 @@ import json
 import requests
 from datetime import datetime
 from datetime import timedelta
+
+
 from remote_SEIRHDV import SEIRHVD_DA
 
 """
@@ -25,67 +27,48 @@ SEIRHVDB Class Initialization
 # Región Por CUT 
 tstate = '13'
 
-# Parámetros de tiempo
+# Fecha Inicial
 initdate = datetime(2020,5,15)
 
-
-# Ajuste por ventiladores
 # Parametros del modelo
-beta = 0.117 #0.25#0.19 0.135
-mu = 0.6 #2.6 0.6
-ScaleFactor = 1.9 #4.8
+beta = 0.117 # Tasa de contagio
+mu = 0.6 # Razon E0/I0
+ScaleFactor = 1.9 # Factor de Escala: Numero de infectados por sobre los reportados
 SeroPrevFactor = 0.5 # Sero Prevalence Factor. Permite ajustar la cantidad de gente que entra en la dinamica
 expinfection = 1 # Proporcion en la que contagian los expuestos
 
-tsim = 500
+tsim = 500 # Tiempo de simulacion
 
+# Creación del objeto de simulación 
+simulation = SEIRHVD_DA(beta = beta,mu = mu,ScaleFactor=ScaleFactor,SeroPrevFactor=SeroPrevFactor,expinfection=expinfection,initdate = initdate, tsim = tsim,tstate=tstate)
 
-
-
-simulation = SEIRHVD_DA(beta,mu,ScaleFactor=ScaleFactor,SeroPrevFactor=SeroPrevFactor,expinfection=expinfection,initdate = initdate, tsim = tsim,tstate=tstate)
+# Creación de escenarios
+# Opcion 1: Escenarios por defecto 
 simulation.defaultescenarios()
 
-#   Creacion de escenarios
+# Opción 2: Escenarios personalizados
 # [tsim,max_mov,rem_mov,qp,iqt,fqt,movfunct]
-simulation.inputarray = [[500.0, 0.85, 0.6, 0.0, 0.0, 500.0, 0.0],
- [500.0, 0.85, 0.65, 0.0, 0.0, 500.0, 0.0],
- [500.0, 0.85, 0.7, 0.0, 0.0, 500.0, 0.0]]
+
+inputarray = [[500.0, 0.85, 0.6, 0.0, 0.0, 500.0, 0.0],
+              [500.0, 0.85, 0.65, 0.0, 0.0, 500.0, 0.0],
+              [500.0, 0.85, 0.7, 0.0, 0.0, 500.0, 0.0]]
+simulation.inputarray = np.array(inputarray)
 simulation.addscenario()
+
+
+# Simular
 simulation.simulate()
 
+# Análisis de Resultados
+# funcion genérica: 
+simulation.pĺotvariable(enddate =  datetime(2020,7,30),days=0, reales= True,ylim = 0,norm=1,scalefactor = False)
+
+simulation.plotactivos()
+# Infectados Activos  
+simulation.tabladedatos(inicio = datetime(2020,5,15), fin = datetime(2020,6,30),variables =['I_cum','I_act','D','L'], path=''))
 
 
-endpoint = 'http://192.168.2.248:5003/SEIRHVDsimulate'
-
-data = {
-'state': str(tstate),
-'beta': str(beta),
-'mu': str(mu),
-'tsim': str(tsim),
-'initdate': initdate.strftime('%Y/%m/%d'),
-'ScaleFactor': str(ScaleFactor),
-'SeroPrevFactor': str(SeroPrevFactor),
-'qp': str(0),
-'min_mov': str(0.65),
-'max_mov': str(0.85),
-'movfunct': str(0),
-'qit': str(0),
-'qft': str(100)}
-
-data = {
-'state': str(tstate),
-'beta': str(beta),
-'mu': str(mu),
-'tsim': str(tsim),
-'initdate': initdate.strftime('%Y/%m/%d'),
-'ScaleFactor': str(ScaleFactor),
-'SeroPrevFactor': str(SeroPrevFactor),
-'inputarray': str(inputarray)}
 
 
-r = requests.post(url = endpoint, data = data)
 
-sims = pickle.loads(r.content)
 
-for key in sims: 
-    print(key)
