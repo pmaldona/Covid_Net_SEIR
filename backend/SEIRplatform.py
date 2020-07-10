@@ -5,7 +5,7 @@
 import sys
 from pathlib import Path
 home = str(Path.home())                                                                                                                                                                                 
-sys.path.insert(1, home+'/Covid_Net_SEIR/SEIRHDV/') 
+sys.path.insert(1, home+'/Covid_Net_SEIR/SEIRHVD/') 
 sys.path.insert(1, home+'/Covid_Net_SEIR/SEIRHVDB/') 
 sys.path.insert(1, home+'/Covid_Net_SEIR/SEIRUNI/') 
 sys.path.insert(1, home+'/Covid_Net_SEIR/SEIRMULTI/') 

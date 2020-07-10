@@ -24,7 +24,7 @@ import pygmo as pg
 #comunas = pd.DataFrame(mydict)
 
 
-def intger(Si,Ei,Ii,Ri,ti,T,h,beta,sigma,gamma,mov,qp=0,tci=None, movfunct = 'sawtooth'):
+def edosolver(Si,Ei,Ii,Ri,ti,T,h,beta,sigma,gamma,mov,qp=0,tci=None, movfunct = 'sawtooth'):
     # Movility function shape
     if movfunct == 'sawtooth':
         def f(t): 
@@ -141,7 +141,7 @@ def simulate(state,comuna,beta,sigma,gamma,mu,qp=0,mov=0.2,tsim=300,tci=None,mov
     b_date=(dt.datetime.strptime(data.labels.loc[0], '%d/%m') + dt.timedelta(days=43830)).strftime("%d-%b-%Y")
     if tci == None:
         tci = tr[-1]
-    result = intger(S0,mu*I0,I0,R0,min(tr),tsim,h,beta,sigma,gamma,mov,qp,tci,movfunct)
+    result = edosolver(S0,mu*I0,I0,R0,min(tr),tsim,h,beta,sigma,gamma,mov,qp,tci,movfunct)
     result['init_date'] = b_date
     return(result)
 
@@ -196,14 +196,14 @@ def ref_sim_all(state,comuna,mov=0.2,qp=0,tsim = 300,tci=None,movfunct='sawtooth
     def opti(x):
         E0=0
         E0=x[3]*I0
-        sol=pd.DataFrame(intger(S0,E0,I0,R0,min(tr),max(tr),h,x[0],x[1],x[2],mov,qp,tr[-1],movfunct))
+        sol=pd.DataFrame(edosolver(S0,E0,I0,R0,min(tr),max(tr),h,x[0],x[1],x[2],mov,qp,tr[-1],movfunct))
         return(objective_funct(Ir,tr,sol.I,sol.t))
         
     
     xopt, fopt = pso(opti, lb, ub, minfunc=1e-8, omega=0.5, phip=0.5, phig=0.5,swarmsize=100,maxiter=50)
     #print('rel_error '+str(fopt/LA.norm(Ir)))
     print('error '+str(fopt))
-    sim=intger(S0,xopt[3]*I0,I0,R0,min(tr),tsim,h,xopt[0],xopt[1],xopt[2],mov,qp,tr[-1],movfunct)
+    sim=edosolver(S0,xopt[3]*I0,I0,R0,min(tr),tsim,h,xopt[0],xopt[1],xopt[2],mov,qp,tr[-1],movfunct)
     b_date=dt.datetime.strptime(data.labels.loc[0], '%d/%m')
 
     tout = range(int(tsim))
@@ -274,7 +274,7 @@ def ref_sim_national(mov=0.2,qp=0,tsim = 300,tci=None,movfunct='sawtooth'):
     def opti(x):
         E0=0
         E0=x[3]*I0
-        sol=intger(S0,E0,I0,R0,min(tr),max(tr),h,x[0],x[1],x[2],mov,qp,tr[-1],movfunct)
+        sol=edosolver(S0,E0,I0,R0,min(tr),max(tr),h,x[0],x[1],x[2],mov,qp,tr[-1],movfunct)
         return(objective_funct(Ir,tr,sol['I'],sol['t']))
         
     
@@ -283,7 +283,7 @@ def ref_sim_national(mov=0.2,qp=0,tsim = 300,tci=None,movfunct='sawtooth'):
     print(fopt/LA.norm(Ir))
     print('error ')
     print(fopt)
-    sim=intger(S0,xopt[3]*I0,I0,R0,min(tr),tsim,0.01,xopt[0],xopt[1],xopt[2],mov,qp,tr[-1],movfunct)
+    sim=edosolver(S0,xopt[3]*I0,I0,R0,min(tr),tsim,0.01,xopt[0],xopt[1],xopt[2],mov,qp,tr[-1],movfunct)
     b_date=dt.datetime.strptime(data.Fecha.loc[0], 'Y%-%d-%m')
 
     return({'Ir':Ir,'tr':tr, 'params':xopt, 'err':fopt,'sim':sim, 'init_date':b_date})
@@ -345,7 +345,7 @@ def ref_sim_national_mu(mov=0.2,qp=0,tsim = 300,tci=None,movfunct='sawtooth',mu=
     def opti(x):
         E0=0
         E0=mu*I0
-        sol=intger(S0,E0,I0,R0,min(tr),max(tr),h,x[0],x[1],x[2],mov,qp,tr[-1],movfunct)
+        sol=edosolve(S0,E0,I0,R0,min(tr),max(tr),h,x[0],x[1],x[2],mov,qp,tr[-1],movfunct)
         return(objective_funct(Ir,tr,sol['I'],sol['t']))
         
     
@@ -354,7 +354,7 @@ def ref_sim_national_mu(mov=0.2,qp=0,tsim = 300,tci=None,movfunct='sawtooth',mu=
     print(fopt/LA.norm(Ir))
     print('error ')
     print(fopt)
-    sim=intger(S0,mu*I0,I0,R0,min(tr),tsim,0.01,xopt[0],xopt[1],xopt[2],mov,qp,tr[-1],movfunct)
+    sim=edosolver(S0,mu*I0,I0,R0,min(tr),tsim,0.01,xopt[0],xopt[1],xopt[2],mov,qp,tr[-1],movfunct)
     b_date=dt.datetime.strptime(data.Fecha.loc[0], '%Y-%d-%m')
 
     return({'Ir':Ir,'tr':tr, 'params':xopt, 'err':fopt, 'rerr':fopt/LA.norm(Ir), 'sim':sim, 'init_date':b_date})
@@ -403,14 +403,14 @@ def ref_sim_epi(state,comuna,mov=0.2,qp=0,tsim = 300,tci=None,movfunct='sawtooth
     def opti(x):
         E0=0
         E0=x[3]*I0
-        sol=pd.DataFrame(intger(S0,E0,I0,R0,min(tr),max(tr),h,x[0],x[1],x[2],mov,qp,tr[-1],movfunct))
+        sol=pd.DataFrame(edosolver(S0,E0,I0,R0,min(tr),max(tr),h,x[0],x[1],x[2],mov,qp,tr[-1],movfunct))
         return(objective_funct(Ir,tr,sol.I,sol.t))
         
     
     xopt, fopt = pso(opti, lb, ub, minfunc=1e-8, omega=0.5, phip=0.5, phig=0.5,swarmsize=100,maxiter=50)
     #print('rel_error '+str(fopt/LA.norm(Ir)))
     print('error '+str(fopt))
-    sim=intger(S0,xopt[3]*I0,I0,R0,min(tr),tsim,h,xopt[0],xopt[1],xopt[2],mov,qp,tr[-1],movfunct)
+    sim=edosolver(S0,xopt[3]*I0,I0,R0,min(tr),tsim,h,xopt[0],xopt[1],xopt[2],mov,qp,tr[-1],movfunct)
     b_date=dt.datetime(2020,4,1) #dt.datetime.strptime(data.labels.loc[0], '%d/%m')
 
     tout = range(int(tsim))
@@ -462,7 +462,7 @@ def simulate_epi(state,comuna,beta,sigma,gamma,mu,qp=0,mov=0.2,tsim=300,tci=None
     b_date=dt.datetime(2020,4,1) #(dt.datetime.strptime(data.labels.loc[0], '%d/%m') + dt.timedelta(days=43830)).strftime("%d-%b-%Y")
     if tci == None:
         tci = tr[-1]
-    result = intger(S0,mu*I0,I0,R0,min(tr),tsim,h,beta,sigma,gamma,mov,qp,tci,movfunct)
+    result = edosolver(S0,mu*I0,I0,R0,min(tr),tsim,h,beta,sigma,gamma,mov,qp,tci,movfunct)
     result['init_date'] = b_date
     return(result)
 
@@ -532,7 +532,7 @@ def ref_sim_pygmo(state,comuna,mov=0.2,qp=0,tsim = 300,tci=None,movfunct='sawtoo
     xopt = pop.champion_x
     print('error '+str(err))
     print('rel_error '+str(err/LA.norm(Ir)))    
-    sim=intger(S0,xopt[3]*I0,I0,R0,min(tr),tsim,h,xopt[0],xopt[1],xopt[2],mov,qp,tr[-1],movfunct)
+    sim=edosolve(S0,xopt[3]*I0,I0,R0,min(tr),tsim,h,xopt[0],xopt[1],xopt[2],mov,qp,tr[-1],movfunct)
     b_date=dt.datetime.strptime(data.labels.loc[0], '%d/%m')
 
     tout = range(int(tsim))
@@ -561,7 +561,7 @@ class SEIRModel:
         self.bounds = bounds
     def fitness(self,x):        
         self.E0=x[3]*self.I0
-        sol=pd.DataFrame(intger(self.S0,self.E0,self.I0,self.R0,min(tr),max(tr),self.h,x[0],x[1],x[2],self.mov,self.qp,tr[-1],self.movfunct))
+        sol=pd.DataFrame(edosolve(self.S0,self.E0,self.I0,self.R0,min(tr),max(tr),self.h,x[0],x[1],x[2],self.mov,self.qp,tr[-1],self.movfunct))
         idx=np.searchsorted(sol.t,self.tr)
         res = LA.norm(self.Ir-sol.I[idx])        
         return([res])
