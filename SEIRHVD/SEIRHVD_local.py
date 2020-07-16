@@ -3,6 +3,7 @@
 
 import class_SEIRHUVD3 as SD3
 import class_SEIRHUVD2 as SD2
+import class_SEIR as SEIR
 import SEIRHVD_importdata
 import SEIRHVD_tables
 import SEIRHVD_plots
@@ -14,14 +15,19 @@ import numpy as np
 from scipy.special import expit
 
 """
-   
-   SEIRHDV Local Simulation
+# ------------------------------------------- #
+#                                             #
+#            SEIRHDV Local Simulation         #
+#                                             #
+# ------------------------------------------- #
+
+Requires scikitis.odes library
 
 """
 
 class SEIRHVD_local(SEIRHVD_tables.SEIRHVD_tables,SEIRHVD_plots.SEIRHVD_plots,SEIRHVD_importdata.SEIRHVD_importdata,SEIRHVD_vars.SEIRHVD_vars,SEIRHVD_quarantine.SEIRHVD_quarantine):
         
-    def __init__(self,beta,mu,ScaleFactor=1,SeroPrevFactor=1,expinfection=1,initdate = datetime(2020,5,15), tsim = 500,tstate='',bedmodelorder=2):
+    def __init__(self,beta,mu,ScaleFactor=1,SeroPrevFactor=1,expinfection=1,initdate = datetime(2020,5,15), tsim = 500,tstate='',bedmodelorder=2, k = 0,I_as_prop = 0.35, I_mi_prop = 0.63,I_cr_prop = 0.007,I_se_prop = 0.013):
         self.beta = beta
         self.mu = mu
         self.ScaleFactor = ScaleFactor
@@ -31,6 +37,11 @@ class SEIRHVD_local(SEIRHVD_tables.SEIRHVD_tables,SEIRHVD_plots.SEIRHVD_plots,SE
         self.initdate = initdate
         self.tsim = tsim
         self.May15 = (datetime(2020,5,15)-initdate).days
+        self.k = k
+        self.I_as_prop = I_as_prop
+        self.I_mi_prop = I_mi_prop
+        self.I_cr_prop = I_cr_prop
+        self.I_se_prop = I_se_prop          
         
         # Import real data
         if tstate:
@@ -54,6 +65,7 @@ class SEIRHVD_local(SEIRHVD_tables.SEIRHVD_tables,SEIRHVD_plots.SEIRHVD_plots,SE
             self.B = self.Br[0]  # Muertos acumulados al dia de inicio
             self.D = self.Br[1]-self.Br[0]  # Muertos en el dia de inicio
             self.R  = 0
+            
             self.realdata = True
         else:
             self.inputdata = False
@@ -80,42 +92,17 @@ class SEIRHVD_local(SEIRHVD_tables.SEIRHVD_tables,SEIRHVD_plots.SEIRHVD_plots,SE
     #    Simulate    #
     # -------------- #
 
-    def simulate(self,v=2,intgr=0):
+    def simulate(self,v=3,intgr=0):
         if not self.inputdata:
             return('Set the initial values before running the simulation!')
-
-        #dead = 'minsal'
-        ## Valores iniciales
-        #if dead=='minsal':        
-        #    self.B = self.Br[0]  # Muertos acumulados al dia de inicio
-        #    self.D = self.Br[1]-self.Br[0]  # Muertos en el dia de inicio
-        #elif dead == 'exceso':
-        #    self.B = self.ED_RM_ac[0]
-        #   self.D = self.ED_RM_ac[1] - self.ED_RM_ac[0]
-
-
-          # Infectados Activos al dia de inicio
-        #cId0 = self.ScaleFactor*(self.Ir[1]-self.Ir[0])# cId0 # I Nuevos dia 0
-           # Recuperados al dia de inicio
-
-
-        # Dinámica del aumento de camas      
-
-
-        #Hc0=self.Hcmodel[0]#1980
-        #H_incr=self.Hcmodel[1]
-        #H_incr2 = self.Hcmodel[2]
-        #H_incr3 = self.Hcmodel[3]
-        #Vc0=self.Vcmodel[0]#1029
-        #V_incr = self.Vcmodel[1]
-        #V_incr2 = self.Vcmodel[2]
-        #V_incr3 = self.Vcmodel[3] 
-        
 
         if v==2:
             model = SD2.simSEIRHVD(beta = self.beta, mu = self.mu, inputarray= self.inputarray, B=self.B,D=self.D,V=self.V,I_act0=self.I_act0,R=self.R,Htot=self.Htot,Vtot=self.Vtot,H_cr=self.H_cr,H0=self.H0,expinfection=self.expinfection, SeroPrevFactor= self.SeroPrevFactor, population = self.population,intgr=intgr)
         elif v==3:
-            model = SD3.simSEIRHVD(beta = self.beta, mu = self.mu, inputarray= self.inputarray, B=self.B,D=self.D,V=self.V,I_act0=self.I_act0,R=self.R,Htot=self.Htot,Vtot=self.Vtot,H_cr=self.H_cr,H0=self.H0,expinfection=self.expinfection, SeroPrevFactor= self.SeroPrevFactor, population = self.population,intgr=intgr)    
+            model = SD3.simSEIRHVD(beta = self.beta, mu = self.mu, inputarray= self.inputarray, B=self.B,D=self.D,V=self.V,I_act0=self.I_act0,R=self.R,Htot=self.Htot,Vtot=self.Vtot,H_cr=self.H_cr,H0=self.H0,expinfection=self.expinfection, SeroPrevFactor= self.SeroPrevFactor, population = self.population,intgr=intgr,I_as_prop = self.I_as_prop, I_mi_prop = self.I_mi_prop,I_se_prop = self.I_se_prop,I_cr_prop = self.I_cr_prop)
+        elif v==0:
+            print('SEIR Model')
+            model = SEIR.simSEIRHVD(beta = self.beta, mu = self.mu, inputarray= self.inputarray, B=self.B,D=self.D,V=self.V,I_act0=self.I_act0,R=self.R,Htot=self.Htot,Vtot=self.Vtot,H_cr=self.H_cr,H0=self.H0,expinfection=self.expinfection, SeroPrevFactor= self.SeroPrevFactor, population = self.population,intgr=intgr,I_as_prop = self.I_as_prop, I_mi_prop = self.I_mi_prop,I_se_prop = self.I_se_prop,I_cr_prop = self.I_cr_prop,k=self.k)
         else:
             raise('Version Error')
         self.sims = model.simulate()

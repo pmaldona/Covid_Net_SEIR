@@ -9,7 +9,8 @@
 # -------------------- #
 
 
-Scripts for testing new features and messing around
+Scripts for testing new features and messing around.
+This commands must be run from SEIRHVD directory
 
 """
 
@@ -26,55 +27,48 @@ import numpy as np
 from datetime import datetime
 
 
-# ------------------..........--------------- #
-#        Ingreso de Parámetros Generales      #
 # ------------------------------------------- #
-# Ajuste por Muertos minciencia (SEIRHVD Class 2)
-# Parametros del modelo
+#        Región Metropolitana      #
+# ------------------------------------------- #
+
+
 # Región Por CUT 
 tstate = '13'
 # Fecha Inicial
 initdate = datetime(2020,4,13)
 
+# Fecha de inicio de cuarentena
 qit =  datetime(2020,5,15)
 qit = (qit - initdate).days
 
-# Ajuste por ventiladores
+
 # Parametros del modelo
-beta = 0.117 #0.25#0.19 0.135
-mu = 0.6 #2.6 0.6
-ScaleFactor = 1.9 #4.8
+beta = 0.117
+mu = 0.6 
+ScaleFactor = 1.9
 SeroPrevFactor = 0.22 # Sero Prevalence Factor. Permite ajustar la cantidad de gente que entra en la dinamica
 expinfection = 1 # Proporcion en la que contagian los expuestos
 
 
-
-# Ajuste por infectados acumulados
-# Parametros del modelo
-beta = 0.126 #0.25#0.19 0.135
-mu = 0.6 #2.6 0.6
-ScaleFactor = 1.9 #4.8
-SeroPrevFactor = 0.2 # Sero Prevalence Factor. Permite ajustar la cantidad de gente que entra en la dinamica
-expinfection = 1 # Proporcion en la que contagian los expuestos
-
-tsim = 500 # Tiempo de simulacion
+# Tiempo de simulacion
+tsim = 500 
 
 # Creación del objeto de simulación 
 simulation = SEIRHVD_local(beta = beta,mu = mu,ScaleFactor=ScaleFactor,SeroPrevFactor=SeroPrevFactor,expinfection=expinfection,initdate = initdate, tsim = tsim,tstate=tstate)
 
-
-
+# Creación del vector de cuarentenas
+# [Tsim, max_mov,rem_mov,quarantine period, quarantine initial time, quarantine final time, quarantine type]
 quarantines = [[500.0, 0.85, 0.6, 0.0, qit, 500.0, 0.0],
               [500.0, 0.85, 0.65, 0.0,qit, 500.0, 0.0],
               [500.0, 0.85, 0.7, 0.0, qit, 500.0, 0.0],
               [500.0, 0.85, 0.75, 0.0,qit, 500.0, 0.0],
               [500.0, 0.85, 0.4, 0.0,qit, 500.0, 0.0]]
-simulation.inputarray = np.array(quarantines)
+simulation.inputarray = np.array(quarantines) # This will change during next update
 simulation.addquarantine()
 
-# Simular
-#simulation.importdata() 
 simulation.simulate(v=3)
+
+# Plots de ejemplo:
 simulation.plotinfectadosacumulados() 
 simulation.plotventiladores()
 simulation.plotfallecidosacumulados()
@@ -99,23 +93,30 @@ tsim = 500 # Tiempo de simulacion
 simulation = SEIRHVD_local(beta = beta,mu = mu,ScaleFactor=ScaleFactor,SeroPrevFactor=SeroPrevFactor,expinfection=expinfection,initdate = initdate, tsim = tsim,tstate=tstate)
 
 
-quarantines = [[500.0, 0.85, 0.6, 0.0, 0.0, 500.0, 0.0],
-              [500.0, 0.85, 0.65, 0.0, 0.0, 500.0, 0.0],
-              [500.0, 0.85, 0.7, 0.0, 0.0, 500.0, 0.0]]
+quarantines = [[500.0, 0.85, 0.65, 0.0, 0.0, 500.0, 0.0]]
 simulation.inputarray = np.array(quarantines)
 simulation.addquarantine()
 
-# Simular
-I_act0 = 1000
-dead = 10
+# Valores iniciales
+I_act0 = 1000 
+dead = 10 
 population = 100000
 H0 = 10
 V0 = 1
+# Capacidades hospitalarias
 Htot = 20
 Vtot = 10
+
 simulation.initialvalues(I_act0,dead,population,H0,V0,Htot,Vtot,R=0,D=0,H_cr = 0)
 
+# Simular
 simulation.simulate()
+
+# Plots de ejemplo:
+simulation.plotfallecidosdiarios()
+simulation.plotventiladores()
+
+
 
 
 
@@ -126,7 +127,7 @@ simulation.simulate()
 #     SEIRHDV Remote   #
 #                      #
 # -------------------- #
-
+# Not ready yet
 
 
 from SEIRHVD_remote import SEIRHVD_remote

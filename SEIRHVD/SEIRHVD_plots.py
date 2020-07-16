@@ -529,8 +529,9 @@ class SEIRHVD_plots():
         #    plt.plot([], [], ' ', label='err: '+str(round(100*self.err[i],2))+'%')    
 
         # Reales
-        if reales:
-            plt.scatter(self.I_ac_r_tr,self.I_ac_r,label='Infectados Activos reales')
+        if self.realdata:
+            if reales:
+                plt.scatter(self.I_ac_r_tr,self.I_ac_r,label='Infectados Activos reales')
 
         # Infectados
         for i in range(self.numescenarios):        
@@ -757,11 +758,44 @@ class SEIRHVD_plots():
             plt.plot(self.t[i],self.D[i]/Isf,label='Mov = '+str(self.inputarray[i][2]),color = 'black' ,linestyle = linestyle[i])
         self.plot(title = 'Fallecidos diarios',xlabel='Dias desde '+datetime.strftime(self.initdate,'%Y-%m-%d'))
 
+    # ------------------------------------------- #
+    #       Fallecidos Desagregados Acumulados    #
+    # ------------------------------------------- #
+    def plotfallecidosdesagregados(self,enddate =  datetime(2020,7,30),days=0, reales= True,ylim = 0,norm=1,scalefactor = False,legend=True, accumulated = True):
+        # -------- #
+        #   Time   #
+        # -------- #
+        if days == 0:
+            days = (enddate-self.initdate).days      
+        elif days < 0:
+            days = self.tsim     
+        endD = [np.searchsorted(self.t[i],days) for i in range(self.numescenarios)]
     
+
+        Isf = 1    
+        if scalefactor:
+            Isf = self.ScaleFactor
+
+        linestyle = ['solid','dashed','solid','dashed','dotted','dotted']
+        if accumulated:
+            for i in range(self.numescenarios):
+                plt.plot(self.t[i],self.H_crD[i]/Isf,label='H_crD - Mov = '+str(self.inputarray[i][2]),linestyle = linestyle[i])
+                plt.plot(self.t[i],self.I_crD[i]/Isf,label='I_crD - Mov = '+str(self.inputarray[i][2]),linestyle = linestyle[i])
+                plt.plot(self.t[i],self.I_seD[i]/Isf,label='I_seD - Mov = '+str(self.inputarray[i][2]),linestyle = linestyle[i])
+                plt.plot(self.t[i],self.VD[i]/Isf,label='VD - Mov = '+str(self.inputarray[i][2]),color = 'black' ,linestyle = linestyle[i])
+        else:
+            for i in range(self.numescenarios):
+                plt.plot(self.t[i],self.H_crD_d[i]/Isf,label='H_crD - Mov = '+str(self.inputarray[i][2]),linestyle = linestyle[i])
+                plt.plot(self.t[i],self.I_crD_d[i]/Isf,label='I_crD - Mov = '+str(self.inputarray[i][2]),linestyle = linestyle[i])
+                plt.plot(self.t[i],self.I_seD_d[i]/Isf,label='I_seD - Mov = '+str(self.inputarray[i][2]),linestyle = linestyle[i])
+                plt.plot(self.t[i],self.VD_d[i]/Isf,label='VD - Mov = '+str(self.inputarray[i][2]),color = 'black' ,linestyle = linestyle[i])        
+        self.plot(title = 'Hospitalized Deaths',xlabel='Dias desde '+datetime.strftime(self.initdate,'%Y-%m-%d'))
+
+
     # ------------------------------------------------ #
     #     Infectados Críticos Fallecidos acumulados    #
     # ------------------------------------------------ #
-    def plotfallecidosIcriticos(self,enddate =  datetime(2020,7,30),days=0, reales= True,ylim = 0,norm=1,scalefactor = False,legend=True):
+    def plotfallecidosIcriticos(self,enddate =  datetime(2020,7,30),days=0, reales= True,ylim = 0,norm=1,scalefactor = False,legend=True, accumulated = True):
         # -------- #
         #   Time   #
         # -------- #
@@ -777,14 +811,18 @@ class SEIRHVD_plots():
             Isf = self.ScaleFactor
 
         linestyle = ['dashed','solid','dashed','dotted','dotted']
-        for i in range(self.numescenarios):
-            plt.plot(self.t[i],self.I_crD[i]/Isf,label='Mov = '+str(self.inputarray[i][2]),color = 'black' ,linestyle = linestyle[i])
+        if accumulated:
+            for i in range(self.numescenarios):
+                plt.plot(self.t[i],self.I_crD[i]/Isf,label='Mov = '+str(self.inputarray[i][2]),color = 'black' ,linestyle = linestyle[i])
+        else:
+            for i in range(self.numescenarios):
+                plt.plot(self.t[i],self.I_crD_d[i]/Isf,label='Mov = '+str(self.inputarray[i][2]),color = 'black' ,linestyle = linestyle[i])                
         self.plot(title = 'Critical Infected Deaths',xlabel='Dias desde '+datetime.strftime(self.initdate,'%Y-%m-%d'))
 
     # ------------------------------------------------ #
     #     Infectados Severos Fallecidos acumulados    #
     # ------------------------------------------------ #
-    def plotfallecidosIseveros(self,enddate =  datetime(2020,7,30),days=0, reales= True,ylim = 0,norm=1,scalefactor = False,legend=True):
+    def plotfallecidosIseveros(self,enddate =  datetime(2020,7,30),days=0, reales= True,ylim = 0,norm=1,scalefactor = False,legend=True, accumulated = True):
         # -------- #
         #   Time   #
         # -------- #
@@ -800,15 +838,19 @@ class SEIRHVD_plots():
             Isf = self.ScaleFactor
 
         linestyle = ['dashed','solid','dashed','dotted','dotted']
-        for i in range(self.numescenarios):
-            plt.plot(self.t[i],self.I_seD[i]/Isf,label='Mov = '+str(self.inputarray[i][2]),color = 'black' ,linestyle = linestyle[i])
+        if accumulated:
+            for i in range(self.numescenarios):
+                plt.plot(self.t[i],self.I_seD[i]/Isf,label='Mov = '+str(self.inputarray[i][2]),color = 'black' ,linestyle = linestyle[i])
+        else:
+            for i in range(self.numescenarios):
+                plt.plot(self.t[i],self.I_seD_d[i]/Isf,label='Mov = '+str(self.inputarray[i][2]),color = 'black' ,linestyle = linestyle[i])                            
         self.plot(title = 'Severe Infected Deaths',xlabel='Dias desde '+datetime.strftime(self.initdate,'%Y-%m-%d'))
 
 
     # --------------------------------------- #
     #     Ventilados Fallecidos acumulados    #
     # --------------------------------------- #
-    def plotfallecidosventilados(self,enddate =  datetime(2020,7,30),days=0, reales= True,ylim = 0,norm=1,scalefactor = False,legend=True):
+    def plotfallecidosventilados(self,enddate =  datetime(2020,7,30),days=0, reales= True,ylim = 0,norm=1,scalefactor = False,legend=True, accumulated = True):
         # -------- #
         #   Time   #
         # -------- #
@@ -824,14 +866,18 @@ class SEIRHVD_plots():
             Isf = self.ScaleFactor
 
         linestyle = ['dashed','solid','dashed','dotted','dotted']
-        for i in range(self.numescenarios):
-            plt.plot(self.t[i],self.VD[i]/Isf,label='Mov = '+str(self.inputarray[i][2]),color = 'black' ,linestyle = linestyle[i])
+        if accumulated:        
+            for i in range(self.numescenarios):
+                plt.plot(self.t[i],self.VD[i]/Isf,label='Mov = '+str(self.inputarray[i][2]),color = 'black' ,linestyle = linestyle[i])
+        else:
+            for i in range(self.numescenarios):
+                plt.plot(self.t[i],self.VD_d[i]/Isf,label='Mov = '+str(self.inputarray[i][2]),color = 'black' ,linestyle = linestyle[i])            
         self.plot(title = 'Ventilated Deaths',xlabel='Dias desde '+datetime.strftime(self.initdate,'%Y-%m-%d'))
 
     # ------------------------------------------- #
     #     Hospitalizados Fallecidos acumulados    #
     # ------------------------------------------- #
-    def plotfallecidoshospitalizados(self,enddate =  datetime(2020,7,30),days=0, reales= True,ylim = 0,norm=1,scalefactor = False,legend=True):
+    def plotfallecidoshospitalizados(self,enddate =  datetime(2020,7,30),days=0, reales= True,ylim = 0,norm=1,scalefactor = False,legend=True, accumulated = True):
         # -------- #
         #   Time   #
         # -------- #
@@ -847,8 +893,12 @@ class SEIRHVD_plots():
             Isf = self.ScaleFactor
 
         linestyle = ['dashed','solid','dashed','dotted','dotted']
-        for i in range(self.numescenarios):
-            plt.plot(self.t[i],self.H_crD[i]/Isf,label='Mov = '+str(self.inputarray[i][2]),color = 'black' ,linestyle = linestyle[i])
+        if accumulated:
+            for i in range(self.numescenarios):
+                plt.plot(self.t[i],self.H_crD[i]/Isf,label='Mov = '+str(self.inputarray[i][2]),color = 'black' ,linestyle = linestyle[i])
+        else:
+            for i in range(self.numescenarios):
+                plt.plot(self.t[i],self.H_crD_d[i]/Isf,label='Mov = '+str(self.inputarray[i][2]),color = 'black' ,linestyle = linestyle[i])            
         self.plot(title = 'Hospitalized Deaths',xlabel='Dias desde '+datetime.strftime(self.initdate,'%Y-%m-%d'))
 
 
@@ -1002,7 +1052,7 @@ class SEIRHVD_plots():
             plt.plot([], [], ' ', label='Mov='+str(self.inputarray[i][2])+'Peak='+self.peak_date[i].strftime('%Y-%m-%d'))
         
 
-        linestyle = ['dashed','solid','dashed','dotted','dotted']
+        linestyle = ['solid','dashed','dotted','solid','dashed','dotted']
         for i in range(self.numescenarios):        
             plt.plot(self.t[i],self.S[i],label='Susceptibles Mov = '+str(self.inputarray[i][2]),linestyle=linestyle[i])
             plt.plot(self.t[i],self.I[i],label='Infectados Mov = '+str(self.inputarray[i][2]),linestyle=linestyle[i])        

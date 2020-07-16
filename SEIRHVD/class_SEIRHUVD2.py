@@ -39,7 +39,8 @@ class simSEIRHVD:
             [500,0.4,0.4,0,0,500,0]])            
 
 
-    def __init__(self,beta = 0.19, mu =2.6,inputarray = definputarray,B=221,D=26,V=758,I_act0=12642,R=0,Htot=None,Vtot=None,H_cr=0,H0=1720,Hmax=4000,Vmax=2000,expinfection=0,SeroPrevFactor=1,population = 1000000, intgr = 0,I_as_ac =0, I_mi_ac = 0, I_se_ac = 0, I_cr_ac = 0,H_crD = 0, VD=0,I_crD=0,I_seD=0):
+    def __init__(self,beta = 0.19, mu =2.6,inputarray = definputarray,B=221,D=26,V=758,I_act0=12642,R=0,Htot=None,Vtot=None,H_cr=0,H0=1720,Hmax=4000,Vmax=2000,expinfection=0,SeroPrevFactor=1,population = 1000000, 
+    intgr = 0,I_as_ac =0, I_mi_ac = 0, I_se_ac = 0, I_cr_ac = 0,H_crD = 0, VD=0,I_crD=0,I_seD=0,I_as_prop = 0.35, I_mi_prop = 0.63,I_cr_prop = 0.007,I_se_prop = 0.013):
         self.mu = mu
         self.beta = beta 
         self.sims = []
@@ -74,6 +75,12 @@ class simSEIRHVD:
         self.I_seD = I_seD
         self.I_crD = I_crD
 
+        # Initial Infected proportion
+        self.I_as_prop = I_as_prop
+        self.I_mi_prop = I_mi_prop
+        self.I_cr_prop = I_cr_prop
+        self.I_se_prop = I_se_prop        
+
         # dayly Infected
         self.I_as_d = 0
         self.I_mi_d = 0
@@ -94,6 +101,7 @@ class simSEIRHVD:
         case.Vtot = self.Vtot
         case.H_cr = self.H_cr  # Hospitalizados a la espera de un ventilador dia 0
         case.H0 = self.H0  # Hospitalizados totales dia 0
+
         case.Hmax = self.Hmax
         case.Vmax = self.Vmax
         case.expinfection = self.expinfection
@@ -117,10 +125,17 @@ class simSEIRHVD:
         case.I_se_d = self.I_se_d
         case.I_cr_d = self.I_cr_d
 
+        case.I_as_prop=self.I_as_prop
+        case.I_mi_prop=self.I_mi_prop
+        case.I_cr_prop=self.I_cr_prop
+        case.I_se_prop=self.I_se_prop        
+
         case.setrelationalvalues()
-        if self.intgr == 0:                
+        if self.intgr == 0:
+            print('Fast Solver')                
             case.integr_sci(0,tsim,0.1,False)  
-        else:            
+        else:
+            print('Robust Solver')             
             case.integr(0,tsim,0.1,False)                  
         
         out=[case,max_mov,rem_mov,qp,tsim]
@@ -243,6 +258,12 @@ class SEIRHUDV :
         self.dI_mi_d = lambda t,E_sy,I_mi_d: self.psymi/self.tsymi*E_sy - I_mi_d 
         self.dI_se_d = lambda t,E_sy,I_se_d: self.psyse/self.tsyse*E_sy - I_se_d
         self.dI_cr_d = lambda t,E_sy,I_cr_d: self.psycr/self.tsycr*E_sy - I_cr_d 
+
+        # Daily Deads         
+        self.dH_crD_d=lambda t,H_cr,V,H_crD_d: self.pcrinD/self.tcrinD*H_cr*(1-self.v_sat(V,t)) - H_crD_d
+        self.dVD_d=lambda t,V,VD_d: self.pVD/self.tVD*V - VD_d
+        self.dI_seD_d=lambda t,I_se,H_in,H_cr,H_out,I_seD_d: self.pseD/self.tseD*I_se*(1-self.h_sat(H_in,H_cr,H_out,t)) - I_seD_d
+        self.dI_crD_d=lambda t,I_cr,H_in,H_cr,H_out,I_crD_d: self.pcrD/self.tcrD*I_cr*(1-self.h_sat(H_in,H_cr,H_out,t)) - I_crD_d        
 
 
     # UCI and UTI beds saturation function
@@ -376,13 +397,25 @@ class SEIRHUDV :
         self.I_se_d = 0
         self.I_cr_d = 0
 
+        # Daily Deaths
+        self.H_crD_d = 0
+        self.VD_d = 0
+        self.I_seD_d = 0
+        self.I_crD_d = 0
+
+        # Initial Infected proportion
+        self.I_as_prop = 0.35
+        self.I_mi_prop = 0.63
+        self.I_cr_prop = 0.007
+        self.I_se_prop = 0.013
+
         self.setrelationalvalues()
 
     def setrelationalvalues(self):
-        self.I_as= 0.35*self.I_act0 
-        self.I_mi= 0.63*self.I_act0 
-        self.I_cr= 0.007*self.I_act0 
-        self.I_se = 0.013*self.I_act0      
+        self.I_as= self.I_as_prop*self.I_act0 
+        self.I_mi= self.I_mi_prop*self.I_act0 
+        self.I_cr= self.I_cr_prop*self.I_act0 
+        self.I_se = self.I_se_prop*self.I_act0      
           
         # Expuestos
         self.E_as=0.3*self.mu*self.I_act0
@@ -537,7 +570,12 @@ class SEIRHUDV :
             I_as_d0=self.I_as_d
             I_mi_d0=self.I_mi_d
             I_se_d0=self.I_se_d
-            I_cr_d0=self.I_cr_d   
+            I_cr_d0=self.I_cr_d  
+
+            H_crD_d0 = self.H_crD_d
+            VD_d0 = self.VD_d
+            I_crD_d0 = self.I_crD_d
+            I_seD_d0 = self.I_seD_d             
             
             self.t=np.arange(t0,T+h,h)
             
@@ -584,6 +622,11 @@ class SEIRHUDV :
             I_se_d0=self.I_se_d[idx]
             I_cr_d0=self.I_cr_d[idx]  
 
+            H_crD_d0 = self.H_crD_d[idx]
+            VD_d0 = self.VD_d[idx]
+            I_seD_d0 = self.I_seD_d[idx]
+            I_crD_d0 = self.I_crD_d[idx]    
+
             #set time grid
             self.t=np.arange(self.t[idx],T+h,h)
 
@@ -627,12 +670,17 @@ class SEIRHUDV :
             ydot[27]=self.dI_as_d(t,y[1],y[27])
             ydot[28]=self.dI_mi_d(t,y[2],y[28]) 
             ydot[29]=self.dI_se_d(t,y[2],y[29]) 
-            ydot[30]=self.dI_cr_d(t,y[2],y[30])            
+            ydot[30]=self.dI_cr_d(t,y[2],y[30])   
+
+            ydot[31]=self.dH_crD_d(t,y[8],y[10],y[31])
+            ydot[32]=self.dVD_d(t,y[10],y[32])
+            ydot[33]=self.dI_seD_d(t,y[5],y[7],y[8],y[9],y[33])
+            ydot[34]=self.dI_crD_d(t,y[6],y[7],y[8],y[9],y[34])                      
                 
             
         initcond = np.array([S0,E_as0,E_sy0,I_as0,I_mi0,I_se0,I_cr0,
                                 H_in0,H_cr0,H_out0,V0,D0,B0,R0,I0,CV0,CH0,ACV0,ACH0,
-                                I_as_ac0,I_mi_ac0,I_se_ac0,I_cr_ac0,H_crD0,VD0,I_crD0,I_seD0,I_as_d0,I_mi_d0,I_se_d0,I_cr_d0]) 
+                                I_as_ac0,I_mi_ac0,I_se_ac0,I_cr_ac0,H_crD0,VD0,I_seD0,I_crD0,I_as_d0,I_mi_d0,I_se_d0,I_cr_d0,H_crD_d0,VD_d0,I_seD_d0,I_crD_d0]) 
 
 
         sol = odeint(model_SEIR_graph, self.t, initcond,method='admo')
@@ -673,6 +721,11 @@ class SEIRHUDV :
         self.I_mi_d=sol.values.y[:,28]
         self.I_se_d=sol.values.y[:,29]
         self.I_cr_d=sol.values.y[:,30] 
+
+        self.H_crD_d = sol.values.y[:,31]
+        self.VD_d = sol.values.y[:,32]
+        self.I_seD_d = sol.values.y[:,33]
+        self.I_crD_d = sol.values.y[:,34]             
 
         return(sol)
 
@@ -722,6 +775,11 @@ class SEIRHUDV :
             I_se_d0=self.I_se_d
             I_cr_d0=self.I_cr_d  
 
+            H_crD_d0 = self.H_crD_d
+            VD_d0 = self.VD_d
+            I_crD_d0 = self.I_crD_d
+            I_seD_d0 = self.I_seD_d  
+
             self.t=np.arange(t0,T+h,h)
             
         elif((min(self.t)<=t0) & (t0<=max(self.t))):
@@ -766,6 +824,11 @@ class SEIRHUDV :
             I_mi_d0=self.I_mi_d[idx]
             I_se_d0=self.I_se_d[idx]
             I_cr_d0=self.I_cr_d[idx]
+
+            H_crD_d0 = self.H_crD_d[idx]
+            VD_d0 = self.VD_d[idx]
+            I_seD_d0 = self.I_seD_d[idx]
+            I_crD_d0 = self.I_crD_d[idx]    
 
             #set time grid
             self.t=np.arange(self.t[idx],T+h,h)
@@ -813,12 +876,17 @@ class SEIRHUDV :
             ydot[27]=self.dI_as_d(t,y[1],y[27])
             ydot[28]=self.dI_mi_d(t,y[2],y[28]) 
             ydot[29]=self.dI_se_d(t,y[2],y[29]) 
-            ydot[30]=self.dI_cr_d(t,y[2],y[30])   
+            ydot[30]=self.dI_cr_d(t,y[2],y[30])
+
+            ydot[31]=self.dH_crD_d(t,y[8],y[10],y[31])
+            ydot[32]=self.dVD_d(t,y[10],y[32])
+            ydot[33]=self.dI_seD_d(t,y[5],y[7],y[8],y[9],y[33])
+            ydot[34]=self.dI_crD_d(t,y[6],y[7],y[8],y[9],y[34])               
 
             return(ydot)
         initcond = np.array([S0,E_as0,E_sy0,I_as0,I_mi0,I_se0,I_cr0,
                                 H_in0,H_cr0,H_out0,V0,D0,B0,R0,I0,CV0,CH0,ACV0,ACH0,
-                                I_as_ac0,I_mi_ac0,I_se_ac0,I_cr_ac0,H_crD0,VD0,I_crD0,I_seD0,I_as_d0,I_mi_d0,I_se_d0,I_cr_d0])
+                                I_as_ac0,I_mi_ac0,I_se_ac0,I_cr_ac0,H_crD0,VD0,I_crD0,I_seD0,I_as_d0,I_mi_d0,I_se_d0,I_cr_d0,H_crD_d0,VD_d0,I_seD_d0,I_crD_d0])
 
          
         sol = solve_ivp(model_SEIR_graph,(t0,T), initcond,method='LSODA')
@@ -856,6 +924,10 @@ class SEIRHUDV :
         self.I_mi_d=sol.y[28,:]
         self.I_se_d=sol.y[29,:]
         self.I_cr_d=sol.y[30,:] 
+        self.H_crD_d = sol.y[31,:]
+        self.VD_d = sol.y[32,:]
+        self.I_seD_d = sol.y[33,:]
+        self.I_crD_d = sol.y[34,:]             
 
         return(sol)
 

@@ -84,12 +84,16 @@ class SEIRHVD_vars():
         self.D = [self.sims[i][0].D for i in range(self.numescenarios)] 
         # Infectados Criticos Fallecidos
         self.I_crD = [self.sims[i][0].I_crD for i in range(self.numescenarios)] 
-        # Infectados Criticos Fallecidos
+        self.I_crD_d = [self.sims[i][0].I_crD_d for i in range(self.numescenarios)]
+        # Infectados Serios Fallecidos
         self.I_seD = [self.sims[i][0].I_seD for i in range(self.numescenarios)]
+        self.I_seD_d = [self.sims[i][0].I_seD_d for i in range(self.numescenarios)]
         # Hospitalizados Criticos Fallecidos
-        self.H_crD = [self.sims[i][0].H_crD for i in range(self.numescenarios)]                   
+        self.H_crD = [self.sims[i][0].H_crD for i in range(self.numescenarios)]
+        self.H_crD_d = [self.sims[i][0].H_crD_d for i in range(self.numescenarios)]
         # Ventilados Fallecidos
-        self.VD = [self.sims[i][0].VD for i in range(self.numescenarios)]                   
+        self.VD = [self.sims[i][0].VD for i in range(self.numescenarios)]
+        self.VD_d = [self.sims[i][0].VD_d for i in range(self.numescenarios)]
 
         # Recuperados
         self.R = [self.sims[i][0].R for i in range(self.numescenarios)] 
@@ -136,6 +140,7 @@ class SEIRHVD_vars():
         
         #self.SHFR = [self.totD[i]/(self.I_se_ac[i][-1]+self.I_cr_ac[i][-1]) if self.totD[i]>15 else 0.15 for i in range(self.numescenarios)] 
         self.SHFR = [self.totD[i]/(self.I_se_ac[i][-1]+self.I_cr_ac[i][-1]) for i in range(self.numescenarios)] 
+        self.SHFR_d = [self.B[i]/(self.I_se_ac[i][-1]+self.I_cr_ac[i][-1]) for i in range(self.numescenarios)]
 
         # -------------- #
         #     Errores    #
